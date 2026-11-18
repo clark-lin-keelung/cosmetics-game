@@ -1,0 +1,2294 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>美妝商店街・商品訂價大作戰（行銷學 Ch.9）</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+      background-color: #fdf8f6;
+      color: #1f2937;
+    }
+    .awning-pink {
+      background: repeating-linear-gradient(
+        90deg,
+        #f43f5e 0px,
+        #f43f5e 16px,
+        #fff1f2 16px,
+        #fff1f2 32px
+      );
+    }
+    .awning-indigo {
+      background: repeating-linear-gradient(
+        90deg,
+        #6366f1 0px,
+        #6366f1 16px,
+        #eef2ff 16px,
+        #eef2ff 32px
+      );
+    }
+    .awning-amber {
+      background: repeating-linear-gradient(
+        90deg,
+        #f59e0b 0px,
+        #f59e0b 16px,
+        #fffbeb 16px,
+        #fffbeb 32px
+      );
+    }
+    .awning-emerald {
+      background: repeating-linear-gradient(
+        90deg,
+        #10b981 0px,
+        #10b981 16px,
+        #ecfdf5 16px,
+        #ecfdf5 32px
+      );
+    }
+    .street-pavement {
+      background-image:
+        radial-gradient(circle at 50% 50%, rgba(244, 63, 94, 0.08) 1px, transparent 1px),
+        linear-gradient(180deg, #f3e8ff 0%, #ffe4e6 50%, #fef3c7 100%);
+      background-size: 20px 20px, 100% 100%;
+    }
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-4px); }
+    }
+    .animate-float {
+      animation: floatSlow 3s ease-in-out infinite;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #e11d48;
+      cursor: pointer;
+      border: 3px solid #fff;
+      box-shadow: 0 2px 6px rgba(225, 29, 72, 0.4);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- 頂部導航列 -->
+  <header class="bg-white/90 backdrop-blur border-b border-rose-100 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 text-white flex items-center justify-center shadow-sm shrink-0 text-xl">
+          💄
+        </div>
+        <div class="min-w-0">
+          <h1 class="font-bold text-gray-900 text-sm sm:text-lg truncate">美妝商店街・訂價大作戰</h1>
+          <p class="text-xs text-rose-600 font-medium truncate">行銷學 Ch.9 制定價格實戰模擬</p>
+        </div>
+      </div>
+
+      <!-- 模式切換 -->
+      <div class="flex items-center bg-rose-50 p-1 rounded-xl border border-rose-100 shrink-0">
+        <button id="tabHost" type="button" class="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition bg-white text-rose-600 shadow-sm">
+          🏫 商店街大螢幕
+        </button>
+        <button id="tabMobile" type="button" class="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition text-gray-600 hover:text-rose-600">
+          📱 學生手機端
+        </button>
+        <button id="tabGuide" type="button" class="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition text-gray-600 hover:text-rose-600 hidden sm:inline-flex">
+          📖 Ch.9 理論庫
+        </button>
+      </div>
+
+      <!-- 右側工具按鈕 -->
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button id="btnBgm" type="button" title="切換背景音樂" class="px-2.5 py-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold transition">
+          🎵 音樂: 開
+        </button>
+        <button id="btnSound" type="button" title="切換音效" class="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-sm">
+          🔊
+        </button>
+        <button id="btnResetGame" type="button" class="px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-rose-50 hover:text-rose-600 text-xs font-medium text-gray-600">
+          重置賽局
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Toast 通知區 -->
+  <div id="toastBox" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- 主內容區 -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6">
+
+    <!-- ==================== 視角 1：商店街大螢幕 (HOST) ==================== -->
+    <section id="viewHost" class="space-y-5">
+
+      <!-- 頂部：回合進度 + 連續性市場情境與控制 -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <!-- 市場情境卡 (8欄) -->
+        <div class="lg:col-span-8 bg-white rounded-2xl border border-rose-100 shadow-sm p-4 sm:p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div class="flex items-center gap-2">
+                <span id="hostRoundBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-rose-600 text-white">
+                  第 1 / 7 回合
+                </span>
+                <span id="hostChapterTag" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                  §9.2.3 刮脂訂價 vs 滲透訂價
+                </span>
+                <span id="hostPhaseBadge" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  訂價決策中
+                </span>
+              </div>
+              <div class="text-xs text-gray-500 font-medium">
+                已提交：<span id="hostSubmitCount" class="font-bold text-rose-600">0 / 8</span> 家店
+              </div>
+            </div>
+
+            <h2 id="hostScenarioTitle" class="text-lg sm:text-xl font-extrabold text-gray-900 mb-1.5">
+              新店開幕・初試啼聲
+            </h2>
+            <p id="hostScenarioDesc" class="text-sm text-gray-600 leading-relaxed mb-4">
+              商店街盛大開幕！各家美妝店剛上架新品，消費者好奇心高但選擇眾多。你會選擇高價「刮脂訂價」先賺早期高利潤，還是低價「滲透訂價」快速搶占人潮與市占率？
+            </p>
+          </div>
+
+          <!-- 市場狀態儀表板 -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3 border-t border-gray-100">
+            <div class="bg-rose-50/70 rounded-xl p-2.5 border border-rose-100">
+              <div class="text-[11px] text-gray-500 font-medium">商店街人潮</div>
+              <div id="mktTraffic" class="text-sm font-bold text-rose-700 mt-0.5">🔥 旺盛 (115%)</div>
+            </div>
+            <div class="bg-indigo-50/70 rounded-xl p-2.5 border border-indigo-100">
+              <div class="text-[11px] text-gray-500 font-medium">顧客價格敏感度</div>
+              <div id="mktElasticity" class="text-sm font-bold text-indigo-700 mt-0.5">⚖️ 中等彈性</div>
+            </div>
+            <div class="bg-amber-50/70 rounded-xl p-2.5 border border-amber-100">
+              <div class="text-[11px] text-gray-500 font-medium">原料與營運成本</div>
+              <div id="mktCostIndex" class="text-sm font-bold text-amber-700 mt-0.5">📦 基準 (100%)</div>
+            </div>
+            <div class="bg-emerald-50/70 rounded-xl p-2.5 border border-emerald-100">
+              <div class="text-[11px] text-gray-500 font-medium">全街平均單價</div>
+              <div id="mktAvgPrice" class="text-sm font-bold text-emerald-700 mt-0.5">$450</div>
+            </div>
+          </div>
+
+          <!-- 主控台操作按鈕 -->
+          <div class="flex flex-wrap items-center justify-between gap-3 mt-4 pt-3 border-t border-gray-100">
+            <div class="flex flex-wrap items-center gap-2">
+              <button id="btnAutoBot" type="button" class="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs sm:text-sm font-semibold border border-indigo-200 transition">
+                🤖 模擬未提交店家決策
+              </button>
+              <button id="btnResolveRound" type="button" class="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-xs sm:text-sm font-bold shadow-sm transition">
+                ⚡ 結算本回合市場反應
+              </button>
+              <button id="btnNextRound" type="button" class="hidden px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-sm transition">
+                ➡️ 進入下一回合情境
+              </button>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span id="hostRoomStatusBadge" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
+                🟡 準備建立房間...
+              </span>
+              <button id="btnShowQrModal" type="button" class="px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold shadow-sm transition">
+                📱 學生掃描 QR Code 加入
+              </button>
+              <button id="btnAddShopModal" type="button" class="px-3 py-2 rounded-xl bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold border border-gray-200 transition">
+                ＋ 新增參賽店面
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右側：即時排行榜 (個人 & 組別總和) (4欄) -->
+        <div class="lg:col-span-4 bg-white rounded-2xl border border-rose-100 shadow-sm p-4 sm:p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-gray-900 text-sm sm:text-base flex items-center gap-1.5">
+              🏆 即時戰績榜
+            </h3>
+            <div class="flex bg-gray-100 p-0.5 rounded-lg text-xs font-semibold">
+              <button id="rankTabTeam" type="button" class="px-2.5 py-1 rounded-md bg-white text-rose-600 shadow-sm">組別總和</button>
+              <button id="rankTabInd" type="button" class="px-2.5 py-1 rounded-md text-gray-600">個人排行</button>
+            </div>
+          </div>
+          <div id="leaderboardList" class="space-y-2 flex-1 overflow-y-auto max-h-72 pr-1">
+            <!-- JS 動態渲染 -->
+          </div>
+          <div class="mt-3 pt-2.5 border-t border-gray-100 text-[11px] text-gray-500 flex justify-between">
+            <span>計分基準：訂價後營業額變化率</span>
+            <span id="totalStreetRevenue" class="font-bold text-gray-700">總營收 $0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 回合結算解析橫幅 (結算後顯示) -->
+      <div id="roundResultBanner" class="hidden bg-gradient-to-r from-amber-50 via-rose-50 to-indigo-50 rounded-2xl border border-rose-200 p-4 sm:p-5 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+          <div class="space-y-1.5 flex-1">
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-xs font-bold">本回合市場結算報告</span>
+              <span id="resMvpBadge" class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold"></span>
+            </div>
+            <h3 id="resHeadline" class="text-base sm:text-lg font-extrabold text-gray-900"></h3>
+            <p id="resTheoryExplain" class="text-xs sm:text-sm text-gray-700 leading-relaxed"></p>
+          </div>
+          <div class="bg-white/90 rounded-xl p-3 border border-rose-100 min-w-[220px] shrink-0">
+            <div class="text-xs font-bold text-gray-500 mb-1.5">Ch.9 正確策略指標</div>
+            <div id="resOptimalHint" class="text-xs font-semibold text-emerald-700 leading-relaxed"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 商店街兩側廠商競爭主畫面 -->
+      <div class="bg-white rounded-2xl border border-rose-100 shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-5 py-3 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-400 text-white flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">🏬</span>
+            <h3 class="font-bold text-sm sm:text-base">美妝商店街・雙側實況競爭區</h3>
+          </div>
+          <div class="text-xs text-rose-50 font-medium">
+            點擊任意店面可「切換為該同學的手機端視角」進行測試
+          </div>
+        </div>
+
+        <div class="p-3 sm:p-5 street-pavement">
+          <!-- 三欄式商店街：左側店面 | 中央動態人潮大道 | 右側店面 -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+            <!-- 左側店面 -->
+            <div id="streetLeft" class="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+              <!-- JS 渲染左側店面 -->
+            </div>
+
+            <!-- 中央動態商店街大道（持續動畫不中斷） -->
+            <div id="streetCanvasWrap" class="lg:col-span-2 relative rounded-2xl overflow-hidden border border-rose-200/80 shadow-inner bg-slate-100 min-h-[150px] lg:min-h-[460px]">
+              <canvas id="streetAnimCanvas" class="w-full h-full block"></canvas>
+              <div class="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white/85 backdrop-blur-xs border border-rose-200 text-[10px] font-extrabold text-rose-700 shadow-xs whitespace-nowrap">
+                🛍️ 繁華美妝大道
+              </div>
+            </div>
+
+            <!-- 右側店面 -->
+            <div id="streetRight" class="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+              <!-- JS 渲染右側店面 -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 視角 2：學生手機端 (MOBILE) ==================== -->
+    <section id="viewMobile" class="hidden max-w-md mx-auto">
+      <!-- 未登入 / 登錄畫面 -->
+      <div id="mobileLoginCard" class="bg-white rounded-3xl border border-rose-100 shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-br from-rose-500 to-pink-600 p-6 text-white text-center">
+          <div class="w-14 h-14 mx-auto rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center text-3xl mb-3">
+            📱
+          </div>
+          <h2 class="text-xl font-extrabold">參賽者手機端登錄</h2>
+          <p class="text-xs text-rose-100 mt-1">請輸入你的姓名與組別，接管你的專屬美妝店面</p>
+        </div>
+
+        <form id="mobileLoginForm" class="p-6 space-y-4">
+          <div class="bg-gray-50 rounded-xl p-3 border border-gray-200 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-gray-700">教室連線房間代碼</span>
+              <span id="mobConnBadge" class="text-[11px] font-bold text-gray-500">⚪ 單機模式</span>
+            </div>
+            <div class="flex gap-2">
+              <input id="mobRoomInput" type="text" placeholder="選填：輸入大螢幕代碼（如 4829）" class="flex-1 px-3 py-1.5 rounded-lg border border-gray-200 text-xs bg-white" />
+              <button id="btnMobConnectRoom" type="button" class="px-3 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 shrink-0">連線</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-1">你的姓名 / 暱稱</label>
+            <input id="loginName" type="text" required placeholder="例如：陳小美" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-rose-400 text-sm" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-1">所屬組別（計算團隊總和）</label>
+            <select id="loginTeam" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-rose-400 text-sm bg-white">
+              <option value="A組｜玫瑰女王">A組｜玫瑰女王</option>
+              <option value="B組｜極光水潤">B組｜極光水潤</option>
+              <option value="C組｜星辰彩妝">C組｜星辰彩妝</option>
+              <option value="D組｜植萃實驗室">D組｜植萃實驗室</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-1">選擇接管店面或建立新店</label>
+            <select id="loginShopSelect" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-rose-400 text-sm bg-white">
+              <!-- JS 動態填入現有店面 + 建立新店選項 -->
+            </select>
+          </div>
+
+          <div id="newShopFields" class="hidden space-y-3 p-3.5 rounded-xl bg-rose-50/70 border border-rose-100">
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">自訂店鋪名稱</label>
+              <input id="loginNewShopName" type="text" placeholder="例如：小美肌研社" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">販售化妝品類型</label>
+              <select id="loginNewProductType" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white">
+                <option value="serum">💧 玻尿酸保濕精華液（成本 $220 / 基準 $480）</option>
+                <option value="lipstick">💄 絲絨霧面唇膏（成本 $140 / 基準 $350）</option>
+                <option value="foundation">✨ 輕透持妝粉底液（成本 $260 / 基準 $580）</option>
+                <option value="sunscreen">☀️ 清爽防曬凝乳（成本 $120 / 基準 $290）</option>
+                <option value="eyeshadow">🎨 大地色眼影盤（成本 $190 / 基準 $450）</option>
+                <option value="cleanser">🫧 胺基酸潔顏慕斯（成本 $110 / 基準 $260）</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold text-sm shadow-md transition">
+            進入我的店面開始作戰 🚀
+          </button>
+        </form>
+      </div>
+
+      <!-- 已登入：極簡專注手機端（只看得到自己的商品、分數與本次定價調整） -->
+      <div id="mobileDashCard" class="hidden space-y-4">
+        <!-- 個人識別與分數卡 -->
+        <div class="bg-gradient-to-br from-gray-900 via-gray-800 to-rose-950 text-white rounded-3xl p-5 shadow-lg">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="mobTeamBadge" class="px-2.5 py-0.5 rounded-full bg-rose-500/30 border border-rose-400/40 text-rose-200 text-[11px] font-bold">A組</span>
+                <span id="mobRoundBadge" class="text-xs text-gray-300 font-medium">第 1 / 7 回合</span>
+              </div>
+              <h2 id="mobShopName" class="text-lg font-extrabold mt-1.5">店名</h2>
+              <p id="mobPlayerName" class="text-xs text-gray-300">店長：</p>
+            </div>
+            <button id="btnMobileLogout" type="button" class="text-xs px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200">
+              切換帳號
+            </button>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-white/10">
+            <div>
+              <div class="text-[11px] text-gray-400">個人總分</div>
+              <div id="mobScore" class="text-xl font-black text-amber-400">100</div>
+            </div>
+            <div>
+              <div class="text-[11px] text-gray-400">上回合營業額</div>
+              <div id="mobLastRev" class="text-base font-bold text-white mt-0.5">$0</div>
+            </div>
+            <div>
+              <div class="text-[11px] text-gray-400">營業額變化</div>
+              <div id="mobRevChange" class="text-base font-bold text-emerald-400 mt-0.5">--</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 市場情境提示（供參賽者抉擇） -->
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-extrabold text-amber-800">📢 本回合市場快報</span>
+            <span id="mobMktStatus" class="text-[11px] font-semibold text-amber-700">人潮 115%</span>
+          </div>
+          <h3 id="mobScenarioTitle" class="text-sm font-bold text-gray-900 mb-1"></h3>
+          <p id="mobScenarioDesc" class="text-xs text-gray-700 leading-relaxed"></p>
+        </div>
+
+        <!-- 我的商品與定價調整區 -->
+        <div class="bg-white rounded-3xl border border-rose-100 shadow-sm p-5 space-y-4">
+          <div class="flex items-center gap-3 pb-3 border-b border-gray-100">
+            <div id="mobProductIcon" class="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-2xl shrink-0">💧</div>
+            <div class="min-w-0 flex-1">
+              <div id="mobProductName" class="font-bold text-gray-900 text-sm truncate">商品名稱</div>
+              <div class="text-xs text-gray-500 mt-0.5 flex flex-wrap gap-x-3">
+                <span>單位成本：<strong id="mobCost" class="text-gray-800">$220</strong></span>
+                <span>上期售價：<strong id="mobPrevPrice" class="text-gray-800">$480</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 價格調整控制 -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-bold text-gray-700">本次定價調整（新台幣）</label>
+              <span id="mobPriceDeltaBadge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">0%</span>
+            </div>
+
+            <div class="flex items-center gap-3 mb-3">
+              <button id="btnPriceMinus" type="button" class="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 font-bold text-lg text-gray-700">−</button>
+              <div class="flex-1 relative">
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
+                <input id="mobPriceInput" type="number" min="50" max="2000" step="1" class="w-full pl-8 pr-3 py-2.5 rounded-xl border-2 border-rose-200 focus:border-rose-500 focus:outline-none text-center text-xl font-black text-rose-600" />
+              </div>
+              <button id="btnPricePlus" type="button" class="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 font-bold text-lg text-gray-700">＋</button>
+            </div>
+
+            <input id="mobPriceSlider" type="range" min="100" max="1000" step="1" class="w-full accent-rose-600" />
+
+            <!-- 快捷調價按鈕 -->
+            <div class="grid grid-cols-5 gap-1.5 mt-2.5">
+              <button type="button" data-pct="-20" class="quick-pct py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold">-20%</button>
+              <button type="button" data-pct="-10" class="quick-pct py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold">-10%</button>
+              <button type="button" data-pct="0" class="quick-pct py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold">原價</button>
+              <button type="button" data-pct="10" class="quick-pct py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold">+10%</button>
+              <button type="button" data-pct="20" class="quick-pct py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold">+20%</button>
+            </div>
+          </div>
+
+          <!-- 預估單位毛利提示 -->
+          <div class="flex items-center justify-between text-xs bg-gray-50 rounded-xl px-3.5 py-2.5">
+            <span class="text-gray-600">單件預估毛利：</span>
+            <span id="mobUnitMargin" class="font-bold text-emerald-600">$260 (毛利率 54%)</span>
+          </div>
+
+          <!-- 策略標籤選擇 -->
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-1.5">選擇你的訂價策略意圖（Ch.9）</label>
+            <select id="mobStrategySelect" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-rose-400">
+              <option value="skimming">💎 刮脂訂價 / 威望訂價（高價高品質）</option>
+              <option value="penetration">🌊 滲透訂價 / 銷售極大化（薄利多銷搶市占）</option>
+              <option value="odd">🏷️ 心理畸零訂價（尾數 5 或 9，如 $299）</option>
+              <option value="bundle">🎁 互補 / 搭售組合訂價（拉高客單價）</option>
+              <option value="discount">🎫 折扣 / 犧牲打引流（季節優惠與促銷）</option>
+              <option value="status_quo">⚖️ 維持現況 / 流行訂價（跟隨市場均價）</option>
+              <option value="unethical">⚠️ 聯合漲價 / 誘餌式促銷（高風險手段）</option>
+            </select>
+          </div>
+
+          <button id="btnMobileSubmit" type="button" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-extrabold text-sm shadow-md transition">
+            ✅ 鎖定並送出本回合定價
+          </button>
+
+          <div id="mobWaitNotice" class="hidden text-center p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+            ✓ 你已送出本回合定價！請看大螢幕等待結算（或切換回大螢幕按下結算）。
+          </div>
+        </div>
+
+        <!-- 上回合個人成績回饋（手機端只看得到自己的） -->
+        <div id="mobRoundFeedback" class="hidden bg-white rounded-2xl border border-gray-200 p-4 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-gray-500">上回合結算成績單</span>
+            <span id="mobFbDeltaScore" class="text-xs font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">+15 分</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center bg-gray-50 rounded-xl p-2.5">
+            <div>
+              <div class="text-[10px] text-gray-500">售出數量</div>
+              <div id="mobFbQty" class="text-sm font-bold text-gray-900">0 件</div>
+            </div>
+            <div>
+              <div class="text-[10px] text-gray-500">營業額</div>
+              <div id="mobFbRev" class="text-sm font-bold text-rose-600">$0</div>
+            </div>
+            <div>
+              <div class="text-[10px] text-gray-500">淨利潤</div>
+              <div id="mobFbProfit" class="text-sm font-bold text-emerald-600">$0</div>
+            </div>
+          </div>
+          <p id="mobFbComment" class="text-xs text-gray-600 leading-relaxed"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 視角 3：Ch.9 理論小抄 (GUIDE) ==================== -->
+    <section id="viewGuide" class="hidden bg-white rounded-2xl border border-rose-100 shadow-sm p-5 sm:p-7 space-y-5">
+      <div class="border-b border-gray-100 pb-3">
+        <h2 class="text-xl font-extrabold text-gray-900">行銷學 Ch.9「制定價格」遊戲對照表</h2>
+        <p class="text-xs sm:text-sm text-gray-500 mt-1">本遊戲 7 個連續情境皆對應教科書第 9 章核心架構，供課堂討論與覆盤使用。</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div class="p-4 rounded-xl bg-rose-50/60 border border-rose-100">
+          <h3 class="font-bold text-rose-800 mb-1">§9.1 價格的涵義（貨幣 vs 非貨幣代價）</h3>
+          <p class="text-xs text-gray-700 leading-relaxed">顧客付出的不只是金錢（貨幣代價），還包含排隊時間、精力耗損與心理不耐煩（非貨幣代價）。當店面大排長龍時，適度調價可平衡人流並轉化為品牌利潤。</p>
+        </div>
+        <div class="p-4 rounded-xl bg-indigo-50/60 border border-indigo-100">
+          <h3 class="font-bold text-indigo-800 mb-1">§9.2.1 & §9.2.2 訂價目標與需求彈性</h3>
+          <p class="text-xs text-gray-700 leading-relaxed">訂價目標包含利潤導向、銷售額/市占率導向、維持現況、短期求生與宣示品質。一般商品價格上升需求下降，但「威望性商品」（如精品美妝）價格上升反而需求增加。</p>
+        </div>
+        <div class="p-4 rounded-xl bg-amber-50/60 border border-amber-100">
+          <h3 class="font-bold text-amber-800 mb-1">§9.2.3 & §9.2.4 訂價策略與方法</h3>
+          <p class="text-xs text-gray-700 leading-relaxed">包含刮脂訂價、滲透訂價、成本加成與價格底線、流行訂價法，以及顧客導向的認知價值、心理訂價（威望訂價、尾數 5/9 畸零訂價、犧牲打）。</p>
+        </div>
+        <div class="p-4 rounded-xl bg-emerald-50/60 border border-emerald-100">
+          <h3 class="font-bold text-emerald-800 mb-1">§9.2.5 ~ §9.4 微調、多產品與合法道德性</h3>
+          <p class="text-xs text-gray-700 leading-relaxed">運用季節折扣與互補/搭售訂價拉高客單價；同時嚴格避免觸犯「誘餌式訂價」與「水平價格協定（聯合哄抬價格）」，以免遭受重罰與商譽受損。</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- QR Code 邀請學生加入 Modal -->
+  <div id="qrModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="font-extrabold text-gray-900 text-lg">📱 掃描 QR Code 加入遊戲</h3>
+          <p class="text-xs text-gray-500 mt-0.5">同學用手機相機掃描後，即可在自己手機登入並調價</p>
+        </div>
+        <button id="btnCloseQrModal" type="button" class="text-gray-400 hover:text-gray-700 text-xl font-bold">✕</button>
+      </div>
+
+      <div class="bg-rose-50/70 border border-rose-100 rounded-2xl p-4 flex flex-col items-center text-center space-y-3">
+        <div id="qrCanvasBox" class="bg-white p-3 rounded-2xl shadow-sm border border-rose-100 min-w-[184px] min-h-[184px] flex items-center justify-center"></div>
+        <div class="space-y-1">
+          <div class="text-xs text-gray-500 font-medium">教室房間代碼</div>
+          <div id="qrRoomCodeDisplay" class="text-2xl font-black tracking-widest text-rose-600">----</div>
+          <div id="qrPeerStatusText" class="text-xs font-semibold text-emerald-700">🟢 連線已就緒，目前 0 位同學連線</div>
+        </div>
+      </div>
+
+      <div id="qrHostingHint" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 leading-relaxed">
+        💡 <strong>跨手機掃描提示：</strong>目前偵測到為預覽／本機環境，手機無法直接連入預覽網址。請將此 HTML 檔案上傳至免費靜態空間（如 GitHub Pages、Netlify Drop 或學校網頁空間）並於下方貼上網址，QR Code 即會自動更新！
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="block text-xs font-bold text-gray-700">遊戲公開網址（自動帶入或手動貼上）</label>
+        <div class="flex gap-2">
+          <input id="qrBaseUrlInput" type="url" placeholder="https://your-site.netlify.app/cosmetics_pricing_game.html" class="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-xs" />
+          <button id="btnCopyJoinLink" type="button" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shrink-0">複製連結</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增店面 Modal -->
+  <div id="addShopModal" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-gray-900">新增參賽同學店面</h3>
+        <button id="btnCloseAddModal" type="button" class="text-gray-400 hover:text-gray-700 text-lg">✕</button>
+      </div>
+      <form id="addShopForm" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">同學姓名</label>
+          <input id="addStudentName" type="text" required placeholder="例如：王小明" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">店鋪名稱</label>
+          <input id="addShopName" type="text" required placeholder="例如：星光美妍館" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">組別</label>
+          <select id="addTeam" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm bg-white">
+            <option value="A組｜玫瑰女王">A組｜玫瑰女王</option>
+            <option value="B組｜極光水潤">B組｜極光水潤</option>
+            <option value="C組｜星辰彩妝">C組｜星辰彩妝</option>
+            <option value="D組｜植萃實驗室">D組｜植萃實驗室</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">化妝品商品</label>
+          <select id="addProduct" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm bg-white">
+            <option value="serum">💧 玻尿酸保濕精華液</option>
+            <option value="lipstick">💄 絲絨霧面唇膏</option>
+            <option value="foundation">✨ 輕透持妝粉底液</option>
+            <option value="sunscreen">☀️ 清爽防曬凝乳</option>
+            <option value="eyeshadow">🎨 大地色眼影盤</option>
+            <option value="cleanser">🫧 胺基酸潔顏慕斯</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm">
+          確認加入商店街
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ==================== 音效合成器 (Web Audio API) ====================
+    let soundEnabled = true;
+    let audioCtx = null;
+    function playTone(freq, duration, type = 'sine', vol = 0.08) {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+    function playCashSound() {
+      playTone(880, 0.09, 'triangle', 0.09);
+      setTimeout(() => playTone(1318, 0.18, 'triangle', 0.09), 80);
+    }
+    function playClickSound() {
+      playTone(520, 0.05, 'sine', 0.05);
+    }
+
+    // ==================== 溫馨輕快背景音樂 (動物森友會 / 皮克敏風格 Web Audio 合成) ====================
+    let bgmEnabled = true;
+    let bgmTimer = null;
+    let bgmStep = 0;
+    let bgmStarted = false;
+
+    // C大調輕快小鎮旋律 (MIDI 音高，0 代表休止符)
+    const BGM_MELODY = [
+      72, 76, 79, 0,  76, 79, 84, 0,
+      83, 81, 79, 76, 74, 76, 72, 0,
+      69, 72, 76, 0,  77, 76, 74, 0,
+      79, 76, 74, 72, 74, 0,  72, 0
+    ];
+    // 伴奏和弦根音 (F, G, Em, Am 等暖色進行)
+    const BGM_BASS = [
+      48, 0, 55, 0,  48, 0, 55, 0,
+      53, 0, 60, 0,  55, 0, 48, 0,
+      45, 0, 52, 0,  53, 0, 50, 0,
+      55, 0, 43, 0,  48, 0, 48, 0
+    ];
+    // 輕巧撥弦裝飾音
+    const BGM_PLUCK = [
+      0, 64, 0, 67,  0, 64, 0, 67,
+      0, 65, 0, 69,  0, 67, 0, 64,
+      0, 60, 0, 64,  0, 65, 0, 62,
+      0, 67, 0, 62,  0, 64, 0, 0
+    ];
+
+    function midiToFreq(midi) {
+      return 440 * Math.pow(2, (midi - 69) / 12);
+    }
+
+    function playBgmNote(freq, duration, type, vol, attack = 0.015) {
+      if (!audioCtx || !bgmEnabled) return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(vol, now + attack);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + duration + 0.02);
+    }
+
+    function stepBgm() {
+      if (!bgmEnabled || !audioCtx) return;
+      if (audioCtx.state === 'suspended') return;
+      const idx = bgmStep % BGM_MELODY.length;
+      const m = BGM_MELODY[idx];
+      const b = BGM_BASS[idx];
+      const p = BGM_PLUCK[idx];
+
+      if (m > 0) {
+        // 主旋律：木琴/電鋼琴般的溫暖音色
+        playBgmNote(midiToFreq(m), 0.34, 'triangle', 0.042, 0.012);
+        playBgmNote(midiToFreq(m + 12), 0.14, 'sine', 0.012, 0.008);
+      }
+      if (b > 0) {
+        // 低音彈跳貝斯
+        playBgmNote(midiToFreq(b), 0.28, 'sine', 0.045, 0.01);
+      }
+      if (p > 0) {
+        // 輕快烏克麗麗/馬林巴撥弦
+        playBgmNote(midiToFreq(p), 0.18, 'sine', 0.022, 0.008);
+      }
+      bgmStep++;
+    }
+
+    function startBgmIfNeeded() {
+      if (!bgmEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (!bgmTimer) {
+          bgmTimer = setInterval(stepBgm, 265); // 約 113 BPM 八分音符律動
+        }
+        bgmStarted = true;
+      } catch (e) {}
+    }
+
+    function updateBgmButtonUI() {
+      const btn = document.getElementById('btnBgm');
+      if (!btn) return;
+      if (bgmEnabled) {
+        btn.textContent = '🎵 音樂: 開';
+        btn.className = 'px-2.5 py-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold transition';
+      } else {
+        btn.textContent = '🎵 音樂: 關';
+        btn.className = 'px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 text-xs font-semibold transition';
+      }
+    }
+
+    // ==================== 化妝品商品資料庫 ====================
+    const PRODUCTS = {
+      serum: { name: '玻尿酸保濕精華液', icon: '💧', baseCost: 220, basePrice: 480, baseDemand: 65, elasticity: 1.35, prestige: true },
+      lipstick: { name: '絲絨霧面唇膏', icon: '💄', baseCost: 140, basePrice: 350, baseDemand: 85, elasticity: 1.55, prestige: true },
+      foundation: { name: '輕透持妝粉底液', icon: '✨', baseCost: 260, basePrice: 580, baseDemand: 55, elasticity: 1.25, prestige: true },
+      sunscreen: { name: '清爽防曬凝乳', icon: '☀️', baseCost: 120, basePrice: 290, baseDemand: 95, elasticity: 1.75, prestige: false },
+      eyeshadow: { name: '大地色眼影盤', icon: '🎨', baseCost: 190, basePrice: 450, baseDemand: 60, elasticity: 1.45, prestige: false },
+      cleanser: { name: '胺基酸潔顏慕斯', icon: '🫧', baseCost: 110, basePrice: 260, baseDemand: 105, elasticity: 1.85, prestige: false }
+    };
+
+    // ==================== 7 個連續性市場情境 (對應 Ch.9 投影片) ====================
+    const SCENARIOS = [
+      {
+        round: 1,
+        chapter: '§9.2.3 刮脂訂價 vs 滲透訂價',
+        title: 'Day 1｜美妝商店街盛大開幕',
+        desc: '商店街今天正式開幕，湧入大量嚐鮮客群！各店剛上架新品，顧客對價格還在摸索。採「高價刮脂 (+10%~+20%)」能賺高毛利但銷量受限；採「滲透訂價 (-10%~-20%)」能快速吸引排隊人潮與營業額衝刺。',
+        trafficLabel: '🔥 旺盛 (115%)',
+        trafficMult: 1.15,
+        elasticityLabel: '⚖️ 中等彈性',
+        elasticityMult: 1.0,
+        costMult: 1.0,
+        costLabel: '📦 基準 (100%)',
+        optimalStrategies: ['penetration', 'skimming'],
+        idealPctRange: [-18, 12],
+        hintText: '開幕期建議適度「滲透訂價 (-10%~-15%)」快速拉高市占與營業額，或針對精華/粉底類小幅「刮脂 (+5%~+10%)」。',
+        explain: '根據 Ch.9 §9.2.3.1，新產品上市可選「滲透訂價」以較低價格快速攫取市場與規模經濟，或採「刮脂訂價」向願付價格高的早期顧客收取高價。大幅暴漲超過 25% 會讓嚐鮮客直接轉向對面店家！'
+      },
+      {
+        round: 2,
+        chapter: '§9.1 非貨幣代價 & §9.2.2 威望性商品',
+        title: 'Day 2｜網紅打卡爆紅・排隊熱潮來襲',
+        desc: '承接開幕熱度，美妝部落客昨晚發影片推薦這條街！今天門口大排長龍，顧客開始抱怨等待時間太長（非貨幣代價上升），同時高端保養品出現「越貴越搶手」的威望效應。你該如何調價？',
+        trafficLabel: '🚀 爆棚 (135%)',
+        trafficMult: 1.35,
+        elasticityLabel: '💎 彈性降低 (威望效應)',
+        elasticityMult: 0.72,
+        costMult: 1.0,
+        costLabel: '📦 基準 (100%)',
+        optimalStrategies: ['skimming', 'status_quo'],
+        idealPctRange: [5, 22],
+        hintText: '需求強勁且彈性低！適度調漲 (+8%~+20%) 既能篩選客群、減少排隊非貨幣代價，又能大幅拉高營業額。',
+        explain: 'Ch.9 §9.1 指出等待時間與精力耗損屬於「非貨幣代價」；§9.2.2.1 說明當需求強勁或具「威望性商品」特質時，消費者對價格敏感度低，小幅調漲反而能提升品牌認知價值與總營業額！'
+      },
+      {
+        round: 3,
+        chapter: '§9.2.4 成本加成與心理畸零訂價',
+        title: 'Day 3｜國際原料大漲・成本壓力考驗',
+        desc: '突發消息！進口玻尿酸與包材成本暴漲 25%，每件商品的單位成本立刻墊高。但消費者昨天剛經歷排隊熱潮，若直接大幅漲價恐引起反彈。如何守住「價格底線」又維持顧客接受度？',
+        trafficLabel: '👥 平穩 (100%)',
+        trafficMult: 1.0,
+        elasticityLabel: '⚠️ 敏感度升高',
+        elasticityMult: 1.15,
+        costMult: 1.25,
+        costLabel: '📈 原料上漲 (125%)',
+        optimalStrategies: ['odd', 'status_quo'],
+        idealPctRange: [3, 12],
+        hintText: '守住成本底線並小幅微調 (+5%~+10%)，搭配「畸零訂價」（尾數設為 5 或 9，如 $499、$295）降低心理抗拒！',
+        explain: 'Ch.9 §9.2.4.1 提醒需考量「價格底線」避免虧本；§9.2.4.3 指出「心理畸零訂價（尾數 5 或 9）」能讓顧客感覺價格仍在心理門檻內，是成本上漲時最聰明的定價技巧。'
+      },
+      {
+        round: 4,
+        chapter: '§9.2.4 犧牲打 & §9.2.5 季節性折扣',
+        title: 'Day 4｜鄰近百貨週年慶・搶客大作戰',
+        desc: '隔壁街的大型百貨公司今天開跑週年慶，大量顧客被吸走，商店街人潮下滑！你需要用「每日一物犧牲打」或「折扣促銷」把人流拉回商店街，否則營業額將面臨重挫。',
+        trafficLabel: '📉 流失危機 (78%)',
+        trafficMult: 0.78,
+        elasticityLabel: '🔥 極高彈性 (比價潮)',
+        elasticityMult: 1.45,
+        costMult: 1.25,
+        costLabel: '📈 維持高檔 (125%)',
+        optimalStrategies: ['discount', 'penetration'],
+        idealPctRange: [-20, -5],
+        hintText: '面臨外部強敵分流，應果斷啟動「折扣促銷 / 犧牲打 (-8%~-18%)」搶回人潮，維持營業額動能。',
+        explain: 'Ch.9 §9.2.4.3「犧牲打訂價法」與 §9.2.5.1「折扣與現金還本」正是對抗淡季與外部促銷戰的利器。此時若死守高價甚至漲價，客流會瞬間被百貨週年慶吸乾！'
+      },
+      {
+        round: 5,
+        chapter: '§9.3 多項產品訂價（互補與搭售）',
+        title: 'Day 5｜週年慶退燒・組合套裝突圍',
+        desc: '週年慶結束後消費者荷包縮水，單買單品意願降低。商店街決定主打「互補商品（如粉盒+粉蕊）」與「搭售禮盒（組合優惠）」，只要策略選對並微調價格，就能大幅提高客單價！',
+        trafficLabel: '🛍️ 溫和回升 (95%)',
+        trafficMult: 0.95,
+        elasticityLabel: '⚖️ 追求高CP值',
+        elasticityMult: 1.1,
+        costMult: 1.15,
+        costLabel: '📦 略降 (115%)',
+        optimalStrategies: ['bundle', 'odd'],
+        idealPctRange: [-8, 8],
+        hintText: '選擇「互補 / 搭售組合訂價」，價格維持在 -5% ~ +5% 區間，能用組合價值大幅拉升銷售量與總營收！',
+        explain: 'Ch.9 §9.3 強調「互補訂價」與「搭售訂價」能將兩項以上產品組合銷售，讓顧客覺得物超所值，即使單品利潤微降，整體營業額卻能顯著放大。'
+      },
+      {
+        round: 6,
+        chapter: '§9.4 訂價決策的合法性及道德性',
+        title: 'Day 6｜同業私下邀約・誘餌與壟斷陷阱',
+        desc: '商店街幾位神秘業者私下傳訊：提議大家「一起聯合漲價 30%（水平價格協定）」，或用「$99 超低價廣告吸引進店，再謊稱缺貨強迫推銷高價品（誘餌式訂價）」。市場消保官正在巡邏中！',
+        trafficLabel: '👀 高度關注 (105%)',
+        trafficMult: 1.05,
+        elasticityLabel: '🛡️ 重視誠信口碑',
+        elasticityMult: 1.2,
+        costMult: 1.10,
+        costLabel: '📦 回穩 (110%)',
+        optimalStrategies: ['status_quo', 'odd', 'bundle'],
+        idealPctRange: [-10, 8],
+        hintText: '千萬別選「聯合漲價 / 誘餌式促銷」也別暴漲 +25% 以上！守法誠信定價（-8%~+5%）才能贏得顧客信任與高分。',
+        explain: 'Ch.9 §9.4 明確指出：「誘餌式訂價」與「水平價格協定（聯合哄抬價格）」皆屬違法或不道德行為！一旦觸犯不僅市場接受度歸零，還會遭公平會裁罰扣分。'
+      },
+      {
+        round: 7,
+        chapter: '§9.2.1 訂價目標總檢驗（最終決戰）',
+        title: 'Day 7｜年度美妝評比・終局之戰',
+        desc: '最後一天！商店街舉辦「年度美妝大賞」，所有顧客依據各店累積口碑做最後採購。原料成本已完全回穩，請依據你的品牌定位（高品質宣示 / 價值訂價 / 維持現況），做最後一次定價衝刺！',
+        trafficLabel: '👑 決賽盛典 (130%)',
+        trafficMult: 1.30,
+        elasticityLabel: '✨ 品牌忠誠發酵',
+        elasticityMult: 0.9,
+        costMult: 1.0,
+        costLabel: '📦 正常 (100%)',
+        optimalStrategies: ['skimming', 'bundle', 'status_quo'],
+        idealPctRange: [-5, 15],
+        hintText: '成本回穩且人潮盛大！穩健微調 (-5% ~ +12%) 並避開惡性殺價，就能在最終營業額衝刺中奪冠！',
+        explain: 'Ch.9 §9.2.1 總結：成功的訂價必須緊扣「訂價目標」與「顧客認知價值」。能提供最大價值而非單純最低價格的廠商，才是市場的最後贏家（價值訂價法 EDLP）！'
+      }
+    ];
+
+    // ==================== 初始 8 家店（商店街左右兩側各 4 家） ====================
+    const DEFAULT_SHOPS = [
+      { id: 's1', side: 'left', student: '林雅婷', shopName: '雅婷肌研所', team: 'A組｜玫瑰女王', productKey: 'serum', color: 'awning-pink' },
+      { id: 's2', side: 'left', student: '陳冠宇', shopName: '冠宇唇色屋', team: 'B組｜極光水潤', productKey: 'lipstick', color: 'awning-indigo' },
+      { id: 's3', side: 'left', student: '張心怡', shopName: '心怡光感妝', team: 'C組｜星辰彩妝', productKey: 'foundation', color: 'awning-amber' },
+      { id: 's4', side: 'left', student: '黃柏翰', shopName: '柏翰防曬站', team: 'D組｜植萃實驗室', productKey: 'sunscreen', color: 'awning-emerald' },
+      { id: 's5', side: 'right', student: '吳佳穎', shopName: '佳穎植萃坊', team: 'A組｜玫瑰女王', productKey: 'eyeshadow', color: 'awning-pink' },
+      { id: 's6', side: 'right', student: '劉子豪', shopName: '子豪水光殿', team: 'B組｜極光水潤', productKey: 'cleanser', color: 'awning-indigo' },
+      { id: 's7', side: 'right', student: '蔡依琳', shopName: '依琳奢華閣', team: 'C組｜星辰彩妝', productKey: 'serum', color: 'awning-amber' },
+      { id: 's8', side: 'right', student: '鄭宇軒', shopName: '宇軒美學社', team: 'D組｜植萃實驗室', productKey: 'lipstick', color: 'awning-emerald' }
+    ];
+
+    // ==================== 遊戲狀態與跨分頁同步 ====================
+    const STORAGE_KEY = 'cosmetics_pricing_game_v1';
+    const bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('cosmetics_pricing_sync') : null;
+
+    let state = {
+      currentRound: 1,
+      phase: 'bidding', // 'bidding' | 'resolved' | 'finished'
+      rankMode: 'team', // 'team' | 'individual'
+      shops: [],
+      lastResolution: null
+    };
+
+    let currentView = 'host'; // 'host' | 'mobile' | 'guide'
+    let mobileShopId = null;
+
+    function createInitialState() {
+      const shops = DEFAULT_SHOPS.map(d => {
+        const prod = PRODUCTS[d.productKey];
+        const initRev = prod.basePrice * prod.baseDemand;
+        return {
+          ...d,
+          currentPrice: prod.basePrice,
+          prevPrice: prod.basePrice,
+          pendingPrice: prod.basePrice,
+          pendingStrategy: 'status_quo',
+          submitted: false,
+          score: 100,
+          lastScoreDelta: 0,
+          totalRevenue: initRev,
+          lastRevenue: initRev,
+          prevRevenue: initRev,
+          lastRevChangePct: 0,
+          lastQty: prod.baseDemand,
+          lastProfit: (prod.basePrice - prod.baseCost) * prod.baseDemand,
+          lastAcceptance: 100,
+          lastComment: '新店準備開業，請調整第一回合定價！'
+        };
+      });
+      return {
+        currentRound: 1,
+        phase: 'bidding',
+        rankMode: 'team',
+        shops,
+        lastResolution: null
+      };
+    }
+
+    function saveState(broadcast = true) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {}
+      if (broadcast && bc) {
+        bc.postMessage({ type: 'STATE_UPDATE', state });
+      }
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.shops) && parsed.shops.length > 0) {
+            state = parsed;
+            return;
+          }
+        }
+      } catch (e) {}
+      state = createInitialState();
+      saveState(false);
+    }
+
+    if (bc) {
+      bc.onmessage = (ev) => {
+        if (ev.data && ev.data.type === 'STATE_UPDATE') {
+          state = ev.data.state;
+          renderAll();
+        }
+      };
+    }
+
+    // ==================== Toast 提示 ====================
+    function showToast(msg, type = 'info') {
+      const box = document.getElementById('toastBox');
+      const el = document.createElement('div');
+      const colors = {
+        info: 'bg-gray-900 text-white',
+        success: 'bg-emerald-600 text-white',
+        warn: 'bg-amber-500 text-white',
+        error: 'bg-rose-600 text-white'
+      };
+      el.className = `px-4 py-2.5 rounded-xl shadow-lg text-xs sm:text-sm font-semibold transition-all duration-300 ${colors[type] || colors.info}`;
+      el.textContent = msg;
+      box.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 300);
+      }, 2800);
+    }
+
+    // ==================== 經濟與計分引擎 ====================
+    function getScenario() {
+      return SCENARIOS[Math.min(state.currentRound - 1, SCENARIOS.length - 1)];
+    }
+
+    function getCurrentCost(shop) {
+      const scen = getScenario();
+      return Math.round(PRODUCTS[shop.productKey].baseCost * scen.costMult);
+    }
+
+    function computeAveragePrice() {
+      if (!state.shops.length) return 400;
+      const sum = state.shops.reduce((acc, s) => acc + s.currentPrice, 0);
+      return Math.round(sum / state.shops.length);
+    }
+
+    function simulateBotForShop(shop) {
+      const scen = getScenario();
+      const prod = PRODUCTS[shop.productKey];
+      const [minP, maxP] = scen.idealPctRange;
+      const isSmart = Math.random() < 0.78;
+      let pct;
+      if (isSmart) {
+        pct = minP + Math.random() * (maxP - minP);
+        shop.pendingStrategy = scen.optimalStrategies[Math.floor(Math.random() * scen.optimalStrategies.length)];
+      } else {
+        pct = -25 + Math.random() * 55;
+        shop.pendingStrategy = 'status_quo';
+      }
+      let newP = Math.round(prod.basePrice * (1 + pct / 100));
+      if (shop.pendingStrategy === 'odd') {
+        newP = Math.max(99, Math.floor(newP / 10) * 10 + 9);
+      }
+      shop.pendingPrice = Math.max(50, newP);
+      shop.submitted = true;
+    }
+
+    function resolveCurrentRound() {
+      const scen = getScenario();
+      state.shops.forEach(s => {
+        if (!s.submitted) simulateBotForShop(s);
+      });
+
+      const avgSubmittedPrice = state.shops.reduce((a, s) => a + s.pendingPrice, 0) / state.shops.length;
+      let mvpShop = null;
+      let bestRevGrowth = -999;
+
+      state.shops.forEach(shop => {
+        const prod = PRODUCTS[shop.productKey];
+        const cost = Math.round(prod.baseCost * scen.costMult);
+        const newPrice = shop.pendingPrice;
+        const pctFromBase = ((newPrice - prod.basePrice) / prod.basePrice) * 100;
+        const pctFromPrev = ((newPrice - shop.currentPrice) / shop.currentPrice) * 100;
+
+        let effElasticity = prod.elasticity * scen.elasticityMult;
+        let demandMult = scen.trafficMult;
+
+        if (scen.round === 2 && prod.prestige && pctFromBase > 0 && pctFromBase <= 25) {
+          demandMult *= (1 + pctFromBase * 0.008);
+        } else {
+          const priceRatio = newPrice / prod.basePrice;
+          demandMult *= Math.pow(priceRatio, -effElasticity);
+        }
+
+        const compRatio = avgSubmittedPrice / newPrice;
+        demandMult *= (0.75 + 0.25 * Math.min(1.4, Math.max(0.6, compRatio)));
+
+        let strategyBonus = 0;
+        let penalty = 0;
+        let comment = '';
+        const [minIdeal, maxIdeal] = scen.idealPctRange;
+        const inIdealRange = pctFromBase >= minIdeal && pctFromBase <= maxIdeal;
+        const rightStrategy = scen.optimalStrategies.includes(shop.pendingStrategy);
+
+        if (scen.round === 6 && (shop.pendingStrategy === 'unethical' || pctFromPrev >= 25)) {
+          demandMult *= 0.35;
+          penalty = 28;
+          comment = '⚠️ 觸犯 Ch.9 §9.4 價格協定/誘餌式訂價紅線！遭消保單位開罰且顧客抵制，營業額暴跌。';
+        } else if (newPrice < cost && shop.pendingStrategy !== 'discount') {
+          penalty = 12;
+          comment = '📉 售價低於單位成本 ($' + cost + ') 且未搭配犧牲打引流，造成嚴重虧損！';
+        } else if (inIdealRange && rightStrategy) {
+          strategyBonus = 15;
+          demandMult *= 1.15;
+          comment = '🌟 精準命中本回合 Ch.9 策略！市場接受度極高，人潮與營業額同步躍升。';
+        } else if (inIdealRange || rightStrategy) {
+          strategyBonus = 7;
+          demandMult *= 1.05;
+          comment = '👍 定價方向大致正確，顧客接受度良好，穩健貢獻營業額。';
+        } else {
+          comment = '⚖️ 定價與本回合市場情境略有落差，部分顧客轉往對面競爭店面。';
+        }
+
+        if (newPrice % 10 === 9 || newPrice % 10 === 5) {
+          demandMult *= 1.04;
+        }
+
+        const qty = Math.max(5, Math.round(prod.baseDemand * demandMult));
+        const revenue = newPrice * qty;
+        const profit = (newPrice - cost) * qty;
+        const prevRev = shop.lastRevenue || (prod.basePrice * prod.baseDemand);
+        const revChangePct = ((revenue - prevRev) / prevRev) * 100;
+        const acceptance = Math.min(100, Math.max(15, Math.round((qty / (prod.baseDemand * scen.trafficMult)) * 85)));
+
+        let scoreDelta = Math.round(revChangePct * 0.65) + strategyBonus - penalty;
+        if (profit > 0 && scoreDelta < -15 && penalty === 0) scoreDelta = -12;
+
+        shop.prevPrice = shop.currentPrice;
+        shop.currentPrice = newPrice;
+        shop.prevRevenue = prevRev;
+        shop.lastRevenue = revenue;
+        shop.totalRevenue += revenue;
+        shop.lastRevChangePct = revChangePct;
+        shop.lastQty = qty;
+        shop.lastProfit = profit;
+        shop.lastAcceptance = acceptance;
+        shop.lastScoreDelta = scoreDelta;
+        shop.score = Math.max(0, shop.score + scoreDelta);
+        shop.lastComment = comment;
+
+        if (revChangePct > bestRevGrowth) {
+          bestRevGrowth = revChangePct;
+          mvpShop = shop;
+        }
+      });
+
+      state.phase = state.currentRound >= SCENARIOS.length ? 'finished' : 'resolved';
+      state.lastResolution = {
+        round: scen.round,
+        mvpName: mvpShop ? `${mvpShop.shopName} (${mvpShop.student})` : '',
+        mvpGrowth: bestRevGrowth.toFixed(1)
+      };
+
+      saveState();
+      playCashSound();
+      renderAll();
+      showToast(`第 ${scen.round} 回合結算完成！`, 'success');
+    }
+
+    function nextRound() {
+      if (state.currentRound >= SCENARIOS.length) return;
+      state.currentRound += 1;
+      state.phase = 'bidding';
+      state.shops.forEach(s => {
+        s.submitted = false;
+        s.pendingPrice = s.currentPrice;
+      });
+      saveState();
+      playClickSound();
+      renderAll();
+      showToast(`進入第 ${state.currentRound} 回合！`, 'info');
+    }
+
+    // ==================== 渲染邏輯 ====================
+    function renderAll() {
+      renderHost();
+      renderMobile();
+    }
+
+    function renderHost() {
+      const scen = getScenario();
+      document.getElementById('hostRoundBadge').textContent = `第 ${scen.round} / ${SCENARIOS.length} 回合`;
+      document.getElementById('hostChapterTag').textContent = scen.chapter;
+      document.getElementById('hostScenarioTitle').textContent = scen.title;
+      document.getElementById('hostScenarioDesc').textContent = scen.desc;
+
+      document.getElementById('mktTraffic').textContent = scen.trafficLabel;
+      document.getElementById('mktElasticity').textContent = scen.elasticityLabel;
+      document.getElementById('mktCostIndex').textContent = scen.costLabel;
+      document.getElementById('mktAvgPrice').textContent = `$${computeAveragePrice()}`;
+
+      const submittedCount = state.shops.filter(s => s.submitted).length;
+      document.getElementById('hostSubmitCount').textContent = `${submittedCount} / ${state.shops.length}`;
+
+      const phaseBadge = document.getElementById('hostPhaseBadge');
+      const btnAuto = document.getElementById('btnAutoBot');
+      const btnResolve = document.getElementById('btnResolveRound');
+      const btnNext = document.getElementById('btnNextRound');
+      const resBanner = document.getElementById('roundResultBanner');
+
+      if (state.phase === 'bidding') {
+        phaseBadge.textContent = '訂價決策中';
+        phaseBadge.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
+        btnAuto.classList.remove('hidden');
+        btnResolve.classList.remove('hidden');
+        btnNext.classList.add('hidden');
+        resBanner.classList.add('hidden');
+      } else {
+        phaseBadge.textContent = state.phase === 'finished' ? '🏆 全賽程結束' : '📊 本回合已結算';
+        phaseBadge.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-700 border border-rose-200';
+        btnAuto.classList.add('hidden');
+        btnResolve.classList.add('hidden');
+        if (state.phase === 'resolved') {
+          btnNext.classList.remove('hidden');
+        } else {
+          btnNext.classList.add('hidden');
+        }
+        resBanner.classList.remove('hidden');
+        document.getElementById('resHeadline').textContent = `${scen.title} — 市場結算與理論覆盤`;
+        document.getElementById('resTheoryExplain').textContent = scen.explain;
+        document.getElementById('resOptimalHint').textContent = scen.hintText;
+        if (state.lastResolution) {
+          document.getElementById('resMvpBadge').textContent = `👑 本回合營收成長王：${state.lastResolution.mvpName} (${state.lastResolution.mvpGrowth > 0 ? '+' : ''}${state.lastResolution.mvpGrowth}%)`;
+        }
+      }
+
+      const leftEl = document.getElementById('streetLeft');
+      const rightEl = document.getElementById('streetRight');
+      leftEl.innerHTML = '';
+      rightEl.innerHTML = '';
+
+      state.shops.forEach((shop, idx) => {
+        const prod = PRODUCTS[shop.productKey];
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-2xl border border-rose-100 shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer group';
+        card.onclick = () => {
+          mobileShopId = shop.id;
+          switchView('mobile');
+          showToast(`已切換為「${shop.student}」的手機端視角`, 'info');
+        };
+
+        const revDiff = shop.lastRevChangePct;
+        const revDiffStr = revDiff === 0 ? '0.0%' : `${revDiff > 0 ? '+' : ''}${revDiff.toFixed(1)}%`;
+        const revDiffColor = revDiff > 0 ? 'text-emerald-600 bg-emerald-50' : (revDiff < 0 ? 'text-rose-600 bg-rose-50' : 'text-gray-600 bg-gray-100');
+
+        const statusBadge = state.phase === 'bidding'
+          ? (shop.submitted
+              ? '<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">✓ 已鎖定定價</span>'
+              : '<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700 animate-pulse">⏳ 思考調價中</span>')
+          : `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold ${revDiffColor}">營收 ${revDiffStr}</span>`;
+
+        card.innerHTML = `
+          <div class="h-3 ${shop.color || 'awning-pink'}"></div>
+          <div class="p-3.5">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition">
+                  ${prod.icon}
+                </div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <span class="font-extrabold text-gray-900 text-sm truncate">${shop.shopName}</span>
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 shrink-0">${shop.team.split('｜')[0]}</span>
+                  </div>
+                  <div class="text-xs text-gray-500 truncate">${shop.student} ・ ${prod.name}</div>
+                </div>
+              </div>
+              ${statusBadge}
+            </div>
+
+            <div class="grid grid-cols-4 gap-1.5 mt-3 pt-2.5 border-t border-gray-100 text-center">
+              <div class="bg-gray-50 rounded-lg py-1.5 px-1">
+                <div class="text-[10px] text-gray-400">目前售價</div>
+                <div class="text-xs sm:text-sm font-black text-rose-600">$${shop.currentPrice}</div>
+              </div>
+              <div class="bg-gray-50 rounded-lg py-1.5 px-1">
+                <div class="text-[10px] text-gray-400">銷量</div>
+                <div class="text-xs sm:text-sm font-bold text-gray-800">${shop.lastQty}件</div>
+              </div>
+              <div class="bg-gray-50 rounded-lg py-1.5 px-1">
+                <div class="text-[10px] text-gray-400">營業額</div>
+                <div class="text-xs sm:text-sm font-bold text-gray-800">$${shop.lastRevenue.toLocaleString()}</div>
+              </div>
+              <div class="bg-amber-50/70 rounded-lg py-1.5 px-1">
+                <div class="text-[10px] text-amber-700">積分</div>
+                <div class="text-xs sm:text-sm font-black text-amber-600">${shop.score}</div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        if (shop.side === 'left' || (idx % 2 === 0 && !shop.side)) {
+          leftEl.appendChild(card);
+        } else {
+          rightEl.appendChild(card);
+        }
+      });
+
+      renderLeaderboard();
+    }
+
+    function renderLeaderboard() {
+      const box = document.getElementById('leaderboardList');
+      const tabTeam = document.getElementById('rankTabTeam');
+      const tabInd = document.getElementById('rankTabInd');
+
+      if (state.rankMode === 'team') {
+        tabTeam.className = 'px-2.5 py-1 rounded-md bg-white text-rose-600 shadow-sm';
+        tabInd.className = 'px-2.5 py-1 rounded-md text-gray-600';
+
+        const teamMap = {};
+        state.shops.forEach(s => {
+          if (!teamMap[s.team]) {
+            teamMap[s.team] = { team: s.team, score: 0, revenue: 0, count: 0 };
+          }
+          teamMap[s.team].score += s.score;
+          teamMap[s.team].revenue += s.totalRevenue;
+          teamMap[s.team].count += 1;
+        });
+
+        const teams = Object.values(teamMap).sort((a, b) => b.score - a.score);
+        box.innerHTML = teams.map((t, i) => `
+          <div class="flex items-center justify-between p-2.5 rounded-xl border ${i === 0 ? 'bg-amber-50/70 border-amber-200' : 'bg-gray-50 border-gray-100'}">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${i === 0 ? 'bg-amber-400 text-white' : 'bg-gray-200 text-gray-700'}">${i + 1}</span>
+              <div class="min-w-0">
+                <div class="text-xs font-bold text-gray-900 truncate">${t.team}</div>
+                <div class="text-[11px] text-gray-500">${t.count} 位成員 ・ 累計 $${t.revenue.toLocaleString()}</div>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <div class="text-sm font-black text-rose-600">${t.score} 分</div>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        tabInd.className = 'px-2.5 py-1 rounded-md bg-white text-rose-600 shadow-sm';
+        tabTeam.className = 'px-2.5 py-1 rounded-md text-gray-600';
+
+        const sorted = [...state.shops].sort((a, b) => b.score - a.score);
+        box.innerHTML = sorted.map((s, i) => `
+          <div class="flex items-center justify-between p-2 rounded-xl border ${i === 0 ? 'bg-amber-50/70 border-amber-200' : 'bg-gray-50 border-gray-100'}">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black ${i === 0 ? 'bg-amber-400 text-white' : 'bg-gray-200 text-gray-700'}">${i + 1}</span>
+              <div class="min-w-0">
+                <div class="text-xs font-bold text-gray-900 truncate">${s.student} (${s.shopName})</div>
+                <div class="text-[10px] text-gray-500">${s.team.split('｜')[0]} ・ 上期 $${s.lastRevenue.toLocaleString()}</div>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <span class="text-xs font-black text-rose-600">${s.score} 分</span>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const totalRev = state.shops.reduce((a, s) => a + s.totalRevenue, 0);
+      document.getElementById('totalStreetRevenue').textContent = `全街累計 $${totalRev.toLocaleString()}`;
+    }
+
+    function renderMobile() {
+      const loginCard = document.getElementById('mobileLoginCard');
+      const dashCard = document.getElementById('mobileDashCard');
+
+      const shopSelect = document.getElementById('loginShopSelect');
+      shopSelect.innerHTML = state.shops.map(s => `<option value="${s.id}">${s.shopName}（${s.student} - ${PRODUCTS[s.productKey].name}）</option>`).join('')
+        + '<option value="__NEW__">＋ 建立全新店面</option>';
+
+      const myShop = state.shops.find(s => s.id === mobileShopId);
+      if (!myShop) {
+        loginCard.classList.remove('hidden');
+        dashCard.classList.add('hidden');
+        return;
+      }
+
+      loginCard.classList.add('hidden');
+      dashCard.classList.remove('hidden');
+
+      const scen = getScenario();
+      const prod = PRODUCTS[myShop.productKey];
+      const cost = getCurrentCost(myShop);
+
+      document.getElementById('mobTeamBadge').textContent = myShop.team;
+      document.getElementById('mobRoundBadge').textContent = `第 ${scen.round} / ${SCENARIOS.length} 回合`;
+      document.getElementById('mobShopName').textContent = myShop.shopName;
+      document.getElementById('mobPlayerName').textContent = `店長：${myShop.student}`;
+      document.getElementById('mobScore').textContent = myShop.score;
+      document.getElementById('mobLastRev').textContent = `$${myShop.lastRevenue.toLocaleString()}`;
+
+      const rc = myShop.lastRevChangePct;
+      const rcEl = document.getElementById('mobRevChange');
+      rcEl.textContent = rc === 0 ? '--' : `${rc > 0 ? '+' : ''}${rc.toFixed(1)}%`;
+      rcEl.className = `text-base font-bold mt-0.5 ${rc >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+      document.getElementById('mobMktStatus').textContent = `${scen.trafficLabel} | ${scen.costLabel}`;
+      document.getElementById('mobScenarioTitle').textContent = scen.title;
+      document.getElementById('mobScenarioDesc').textContent = scen.desc;
+
+      document.getElementById('mobProductIcon').textContent = prod.icon;
+      document.getElementById('mobProductName').textContent = prod.name;
+      document.getElementById('mobCost').textContent = `$${cost}`;
+      document.getElementById('mobPrevPrice').textContent = `$${myShop.currentPrice}`;
+
+      const priceInput = document.getElementById('mobPriceInput');
+      const priceSlider = document.getElementById('mobPriceSlider');
+      priceSlider.min = Math.max(50, Math.round(prod.basePrice * 0.4));
+      priceSlider.max = Math.round(prod.basePrice * 1.8);
+
+      const activeVal = myShop.submitted ? myShop.pendingPrice : (Number(priceInput.dataset.shopId === myShop.id ? priceInput.value : myShop.currentPrice) || myShop.currentPrice);
+      priceInput.dataset.shopId = myShop.id;
+      priceInput.value = activeVal;
+      priceSlider.value = activeVal;
+      document.getElementById('mobStrategySelect').value = myShop.pendingStrategy || 'status_quo';
+      updateMobilePricePreview(myShop, activeVal);
+
+      const submitBtn = document.getElementById('btnMobileSubmit');
+      const waitNotice = document.getElementById('mobWaitNotice');
+      if (state.phase !== 'bidding') {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        waitNotice.textContent = state.phase === 'finished' ? '🏆 全賽程已結束！請查看大螢幕總成績。' : '📊 本回合已結算！請查看下方成績單，並等待老師開啟下一回合。';
+        waitNotice.classList.remove('hidden');
+      } else if (myShop.submitted) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        submitBtn.textContent = '🔄 修改並重新送出定價';
+        waitNotice.textContent = '✓ 你已送出本回合定價！可隨時切換回大螢幕結算。';
+        waitNotice.classList.remove('hidden');
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        submitBtn.textContent = '✅ 鎖定並送出本回合定價';
+        waitNotice.classList.add('hidden');
+      }
+
+      const fbBox = document.getElementById('mobRoundFeedback');
+      if (state.currentRound > 1 || state.phase !== 'bidding') {
+        fbBox.classList.remove('hidden');
+        const ds = myShop.lastScoreDelta;
+        const dsEl = document.getElementById('mobFbDeltaScore');
+        dsEl.textContent = `${ds >= 0 ? '+' : ''}${ds} 分`;
+        dsEl.className = `text-xs font-extrabold px-2 py-0.5 rounded-full ${ds >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`;
+        document.getElementById('mobFbQty').textContent = `${myShop.lastQty} 件`;
+        document.getElementById('mobFbRev').textContent = `$${myShop.lastRevenue.toLocaleString()}`;
+        document.getElementById('mobFbProfit').textContent = `$${myShop.lastProfit.toLocaleString()}`;
+        document.getElementById('mobFbComment').textContent = myShop.lastComment;
+      } else {
+        fbBox.classList.add('hidden');
+      }
+    }
+
+    function updateMobilePricePreview(shop, priceVal) {
+      const cost = getCurrentCost(shop);
+      const margin = priceVal - cost;
+      const marginPct = priceVal > 0 ? Math.round((margin / priceVal) * 100) : 0;
+      const pctFromCur = Math.round(((priceVal - shop.currentPrice) / shop.currentPrice) * 100);
+
+      const deltaBadge = document.getElementById('mobPriceDeltaBadge');
+      deltaBadge.textContent = `${pctFromCur > 0 ? '+' : ''}${pctFromCur}%`;
+      deltaBadge.className = `text-xs font-bold px-2 py-0.5 rounded-full ${pctFromCur > 0 ? 'bg-rose-100 text-rose-700' : (pctFromCur < 0 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700')}`;
+
+      const marginEl = document.getElementById('mobUnitMargin');
+      marginEl.textContent = `$${margin} (毛利率 ${marginPct}%)`;
+      marginEl.className = `font-bold ${margin >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+    }
+
+    // ==================== 視角切換 ====================
+    function switchView(view) {
+      currentView = view;
+      document.getElementById('viewHost').classList.toggle('hidden', view !== 'host');
+      document.getElementById('viewMobile').classList.toggle('hidden', view !== 'mobile');
+      document.getElementById('viewGuide').classList.toggle('hidden', view !== 'guide');
+
+      const activeCls = 'px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition bg-white text-rose-600 shadow-sm';
+      const inactiveCls = 'px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition text-gray-600 hover:text-rose-600';
+
+      document.getElementById('tabHost').className = view === 'host' ? activeCls : inactiveCls;
+      document.getElementById('tabMobile').className = view === 'mobile' ? activeCls : inactiveCls;
+      document.getElementById('tabGuide').className = (view === 'guide' ? activeCls : inactiveCls) + ' hidden sm:inline-flex';
+      renderAll();
+    }
+
+    // ==================== 事件綁定 ====================
+    document.getElementById('tabHost').addEventListener('click', () => switchView('host'));
+    document.getElementById('tabMobile').addEventListener('click', () => switchView('mobile'));
+    document.getElementById('tabGuide').addEventListener('click', () => switchView('guide'));
+
+    document.getElementById('btnSound').addEventListener('click', (e) => {
+      soundEnabled = !soundEnabled;
+      e.target.textContent = soundEnabled ? '🔊' : '🔇';
+    });
+
+    document.getElementById('btnBgm').addEventListener('click', () => {
+      bgmEnabled = !bgmEnabled;
+      updateBgmButtonUI();
+      if (bgmEnabled) {
+        startBgmIfNeeded();
+      } else if (bgmTimer) {
+        clearInterval(bgmTimer);
+        bgmTimer = null;
+      }
+    });
+
+    // 瀏覽器首次點擊/觸控時自動啟動背景音樂
+    ['pointerdown', 'keydown'].forEach(evt => {
+      document.addEventListener(evt, () => {
+        if (bgmEnabled && !bgmStarted) {
+          startBgmIfNeeded();
+        }
+      }, { once: true });
+    });
+
+    document.getElementById('btnResetGame').addEventListener('click', () => {
+      state = createInitialState();
+      mobileShopId = null;
+      saveState();
+      renderAll();
+      showToast('賽局已重置為第 1 回合！', 'info');
+    });
+
+    document.getElementById('rankTabTeam').addEventListener('click', () => {
+      state.rankMode = 'team';
+      saveState(false);
+      renderLeaderboard();
+    });
+    document.getElementById('rankTabInd').addEventListener('click', () => {
+      state.rankMode = 'individual';
+      saveState(false);
+      renderLeaderboard();
+    });
+
+    document.getElementById('btnAutoBot').addEventListener('click', () => {
+      let count = 0;
+      state.shops.forEach(s => {
+        if (!s.submitted) {
+          simulateBotForShop(s);
+          count++;
+        }
+      });
+      saveState();
+      playClickSound();
+      renderAll();
+      showToast(`已模擬 ${count} 家店完成本回合定價！`, 'info');
+    });
+
+    document.getElementById('btnResolveRound').addEventListener('click', resolveCurrentRound);
+    document.getElementById('btnNextRound').addEventListener('click', nextRound);
+
+    document.getElementById('btnAddShopModal').addEventListener('click', () => {
+      document.getElementById('addShopModal').classList.remove('hidden');
+    });
+    document.getElementById('btnCloseAddModal').addEventListener('click', () => {
+      document.getElementById('addShopModal').classList.add('hidden');
+    });
+    document.getElementById('addShopForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const student = document.getElementById('addStudentName').value.trim();
+      const shopName = document.getElementById('addShopName').value.trim();
+      const team = document.getElementById('addTeam').value;
+      const productKey = document.getElementById('addProduct').value;
+      const prod = PRODUCTS[productKey];
+      const initRev = prod.basePrice * prod.baseDemand;
+      const side = state.shops.filter(s => s.side === 'left').length <= state.shops.filter(s => s.side === 'right').length ? 'left' : 'right';
+
+      state.shops.push({
+        id: 's_' + Date.now(),
+        side,
+        student,
+        shopName,
+        team,
+        productKey,
+        color: 'awning-pink',
+        currentPrice: prod.basePrice,
+        prevPrice: prod.basePrice,
+        pendingPrice: prod.basePrice,
+        pendingStrategy: 'status_quo',
+        submitted: false,
+        score: 100,
+        lastScoreDelta: 0,
+        totalRevenue: initRev,
+        lastRevenue: initRev,
+        prevRevenue: initRev,
+        lastRevChangePct: 0,
+        lastQty: prod.baseDemand,
+        lastProfit: (prod.basePrice - prod.baseCost) * prod.baseDemand,
+        lastAcceptance: 100,
+        lastComment: '新加入商店街，準備迎戰！'
+      });
+      saveState();
+      document.getElementById('addShopModal').classList.add('hidden');
+      e.target.reset();
+      renderAll();
+      showToast(`已新增店面「${shopName}」！`, 'success');
+    });
+
+    document.getElementById('loginShopSelect').addEventListener('change', (e) => {
+      document.getElementById('newShopFields').classList.toggle('hidden', e.target.value !== '__NEW__');
+    });
+
+    document.getElementById('mobileLoginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('loginName').value.trim();
+      const team = document.getElementById('loginTeam').value;
+      const sel = document.getElementById('loginShopSelect').value;
+
+      if (sel === '__NEW__') {
+        const shopName = document.getElementById('loginNewShopName').value.trim() || `${name}的美妝屋`;
+        const productKey = document.getElementById('loginNewProductType').value;
+        const prod = PRODUCTS[productKey];
+        const initRev = prod.basePrice * prod.baseDemand;
+        const side = state.shops.filter(s => s.side === 'left').length <= state.shops.filter(s => s.side === 'right').length ? 'left' : 'right';
+        const newId = 's_' + Date.now();
+        state.shops.push({
+          id: newId,
+          side,
+          student: name,
+          shopName,
+          team,
+          productKey,
+          color: 'awning-pink',
+          currentPrice: prod.basePrice,
+          prevPrice: prod.basePrice,
+          pendingPrice: prod.basePrice,
+          pendingStrategy: 'status_quo',
+          submitted: false,
+          score: 100,
+          lastScoreDelta: 0,
+          totalRevenue: initRev,
+          lastRevenue: initRev,
+          prevRevenue: initRev,
+          lastRevChangePct: 0,
+          lastQty: prod.baseDemand,
+          lastProfit: (prod.basePrice - prod.baseCost) * prod.baseDemand,
+          lastAcceptance: 100,
+          lastComment: '準備好開始第一回合定價了！'
+        });
+        mobileShopId = newId;
+      } else {
+        const shop = state.shops.find(s => s.id === sel);
+        if (shop) {
+          shop.student = name;
+          shop.team = team;
+          mobileShopId = shop.id;
+        }
+      }
+      saveState();
+      playClickSound();
+      renderAll();
+      showToast(`歡迎 ${name} 加入 ${team}！`, 'success');
+    });
+
+    document.getElementById('btnMobileLogout').addEventListener('click', () => {
+      mobileShopId = null;
+      renderMobile();
+    });
+
+    function syncMobilePriceInput(val) {
+      const myShop = state.shops.find(s => s.id === mobileShopId);
+      if (!myShop) return;
+      const num = Math.max(50, Math.min(2000, Math.round(Number(val) || myShop.currentPrice)));
+      document.getElementById('mobPriceInput').value = num;
+      document.getElementById('mobPriceSlider').value = num;
+      updateMobilePricePreview(myShop, num);
+    }
+
+    document.getElementById('mobPriceInput').addEventListener('input', (e) => syncMobilePriceInput(e.target.value));
+    document.getElementById('mobPriceSlider').addEventListener('input', (e) => syncMobilePriceInput(e.target.value));
+    document.getElementById('btnPriceMinus').addEventListener('click', () => {
+      syncMobilePriceInput(Number(document.getElementById('mobPriceInput').value) - 10);
+    });
+    document.getElementById('btnPricePlus').addEventListener('click', () => {
+      syncMobilePriceInput(Number(document.getElementById('mobPriceInput').value) + 10);
+    });
+
+    document.querySelectorAll('.quick-pct').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const myShop = state.shops.find(s => s.id === mobileShopId);
+        if (!myShop) return;
+        const pct = Number(btn.dataset.pct);
+        syncMobilePriceInput(Math.round(myShop.currentPrice * (1 + pct / 100)));
+      });
+    });
+
+    document.getElementById('btnMobileSubmit').addEventListener('click', () => {
+      const myShop = state.shops.find(s => s.id === mobileShopId);
+      if (!myShop || state.phase !== 'bidding') return;
+      myShop.pendingPrice = Math.max(50, Number(document.getElementById('mobPriceInput').value));
+      myShop.pendingStrategy = document.getElementById('mobStrategySelect').value;
+      myShop.submitted = true;
+      saveState();
+      playCashSound();
+      renderAll();
+      showToast('定價已鎖定送出！', 'success');
+    });
+
+    // ==================== WebRTC (PeerJS) 跨裝置即時連線 & QR Code ====================
+    let peer = null;
+    let roomCode = '';
+    let hostConnections = []; // Host 端保存的學生連線
+    let clientConn = null;    // Student 端連向 Host 的連線
+    let isRemoteClient = false;
+
+    function getOrCreateRoomCode() {
+      try {
+        const saved = sessionStorage.getItem('beauty_room_code');
+        if (saved) return saved;
+        const code = String(Math.floor(1000 + Math.random() * 9000));
+        sessionStorage.setItem('beauty_room_code', code);
+        return code;
+      } catch (e) {
+        return String(Math.floor(1000 + Math.random() * 9000));
+      }
+    }
+
+    function broadcastToPeers() {
+      if (!hostConnections.length) return;
+      hostConnections = hostConnections.filter(c => c && c.open);
+      hostConnections.forEach(conn => {
+        try {
+          conn.send({ type: 'STATE_SYNC', state });
+        } catch (e) {}
+      });
+      updateHostRoomBadge();
+    }
+
+    function updateHostRoomBadge() {
+      const openCount = hostConnections.filter(c => c && c.open).length;
+      const badge = document.getElementById('hostRoomStatusBadge');
+      const statusText = document.getElementById('qrPeerStatusText');
+      if (peer && !peer.destroyed && peer.id) {
+        badge.textContent = `🟢 房間 ${roomCode} ・ ${openCount} 台手機連線`;
+        badge.className = 'px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold';
+        if (statusText) statusText.textContent = `🟢 連線已就緒，目前 ${openCount} 位同學手機連線`;
+      } else {
+        badge.textContent = `🟡 單機／同瀏覽器模式 (代碼 ${roomCode})`;
+        badge.className = 'px-2.5 py-1.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 text-xs font-semibold';
+      }
+    }
+
+    function initHostPeer() {
+      if (typeof Peer === 'undefined') {
+        updateHostRoomBadge();
+        return;
+      }
+      roomCode = getOrCreateRoomCode();
+      const peerId = 'beauty-street-' + roomCode;
+      try {
+        peer = new Peer(peerId);
+        peer.on('open', () => {
+          updateHostRoomBadge();
+        });
+        peer.on('connection', (conn) => {
+          hostConnections.push(conn);
+          conn.on('open', () => {
+            updateHostRoomBadge();
+            conn.send({ type: 'STATE_SYNC', state });
+          });
+          conn.on('data', (data) => {
+            handleHostIncomingData(data, conn);
+          });
+          conn.on('close', () => {
+            updateHostRoomBadge();
+          });
+        });
+        peer.on('error', () => {
+          updateHostRoomBadge();
+        });
+      } catch (e) {
+        updateHostRoomBadge();
+      }
+    }
+
+    function handleHostIncomingData(data, conn) {
+      if (!data || !data.type) return;
+      if (data.type === 'PLAYER_JOIN') {
+        const p = data.payload;
+        if (p.isNew) {
+          const exists = state.shops.find(s => s.id === p.shopId);
+          if (!exists) {
+            const prod = PRODUCTS[p.productKey] || PRODUCTS.serum;
+            const initRev = prod.basePrice * prod.baseDemand;
+            const side = state.shops.filter(s => s.side === 'left').length <= state.shops.filter(s => s.side === 'right').length ? 'left' : 'right';
+            state.shops.push({
+              id: p.shopId,
+              side,
+              student: p.student,
+              shopName: p.shopName,
+              team: p.team,
+              productKey: p.productKey,
+              color: 'awning-pink',
+              currentPrice: prod.basePrice,
+              prevPrice: prod.basePrice,
+              pendingPrice: prod.basePrice,
+              pendingStrategy: 'status_quo',
+              submitted: false,
+              score: 100,
+              lastScoreDelta: 0,
+              totalRevenue: initRev,
+              lastRevenue: initRev,
+              prevRevenue: initRev,
+              lastRevChangePct: 0,
+              lastQty: prod.baseDemand,
+              lastProfit: (prod.basePrice - prod.baseCost) * prod.baseDemand,
+              lastAcceptance: 100,
+              lastComment: '手機連線成功，準備好開始定價了！'
+            });
+          }
+        } else {
+          const shop = state.shops.find(s => s.id === p.shopId);
+          if (shop) {
+            shop.student = p.student;
+            shop.team = p.team;
+          }
+        }
+        saveState();
+        renderAll();
+        broadcastToPeers();
+        showToast(`📱 ${p.student} 已從手機端加入遊戲！`, 'success');
+      } else if (data.type === 'PLAYER_SUBMIT') {
+        const { shopId, price, strategy } = data.payload;
+        const shop = state.shops.find(s => s.id === shopId);
+        if (shop && state.phase === 'bidding') {
+          shop.pendingPrice = price;
+          shop.pendingStrategy = strategy;
+          shop.submitted = true;
+          saveState();
+          playCashSound();
+          renderAll();
+          broadcastToPeers();
+          showToast(`📱 ${shop.student} 已送出本回合定價！`, 'info');
+        }
+      }
+    }
+
+    function connectStudentToRoom(code) {
+      const cleanCode = String(code || '').replace(/[^0-9a-zA-Z-]/g, '').trim();
+      if (!cleanCode || typeof Peer === 'undefined') return;
+      const badge = document.getElementById('mobConnBadge');
+      badge.textContent = '🟡 連線大螢幕中...';
+      badge.className = 'text-[11px] font-bold text-amber-600';
+
+      try {
+        if (peer) peer.destroy();
+        peer = new Peer();
+        peer.on('open', () => {
+          const targetId = cleanCode.startsWith('beauty-street-') ? cleanCode : 'beauty-street-' + cleanCode;
+          clientConn = peer.connect(targetId, { reliable: true });
+          clientConn.on('open', () => {
+            isRemoteClient = true;
+            badge.textContent = '🟢 已連線教室大螢幕';
+            badge.className = 'text-[11px] font-bold text-emerald-600';
+            showToast('成功連線到教室大螢幕！', 'success');
+          });
+          clientConn.on('data', (data) => {
+            if (data && data.type === 'STATE_SYNC' && data.state) {
+              state = data.state;
+              renderAll();
+            }
+          });
+          clientConn.on('close', () => {
+            badge.textContent = '🔴 連線已中斷';
+            badge.className = 'text-[11px] font-bold text-rose-600';
+          });
+        });
+        peer.on('error', () => {
+          badge.textContent = '⚠️ 無法連線（請確認代碼或網路）';
+          badge.className = 'text-[11px] font-bold text-rose-600';
+        });
+      } catch (e) {}
+    }
+
+    function getJoinUrl() {
+      const baseInput = document.getElementById('qrBaseUrlInput').value.trim();
+      const base = baseInput || (window.location.origin + window.location.pathname);
+      const sep = base.includes('?') ? '&' : '?';
+      return `${base}${sep}room=${roomCode}`;
+    }
+
+    function renderQrCode() {
+      const box = document.getElementById('qrCanvasBox');
+      box.innerHTML = '';
+      const url = getJoinUrl();
+      if (typeof QRCode !== 'undefined') {
+        new QRCode(box, {
+          text: url,
+          width: 176,
+          height: 176,
+          colorDark: '#1f2937',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } else {
+        box.innerHTML = '<div class="text-xs text-gray-500 p-4">QR Code 載入中...</div>';
+      }
+      document.getElementById('qrRoomCodeDisplay').textContent = roomCode;
+    }
+
+    // 攔截 saveState 讓 Host 每次狀態變更也同步給手機端
+    const _origSaveState = saveState;
+    saveState = function(broadcast = true) {
+      _origSaveState(broadcast);
+      if (!isRemoteClient && broadcast) {
+        broadcastToPeers();
+      }
+    };
+
+    // QR Modal 事件
+    document.getElementById('btnShowQrModal').addEventListener('click', () => {
+      const isHosted = window.location.protocol.startsWith('http') && !window.location.href.startsWith('blob:') && !window.location.hostname.includes('localhost');
+      const hintEl = document.getElementById('qrHostingHint');
+      const urlInput = document.getElementById('qrBaseUrlInput');
+      if (!urlInput.value) {
+        urlInput.value = window.location.protocol.startsWith('http') ? (window.location.origin + window.location.pathname) : '';
+      }
+      hintEl.classList.toggle('hidden', isHosted);
+      renderQrCode();
+      updateHostRoomBadge();
+      document.getElementById('qrModal').classList.remove('hidden');
+    });
+
+    document.getElementById('btnCloseQrModal').addEventListener('click', () => {
+      document.getElementById('qrModal').classList.add('hidden');
+    });
+
+    document.getElementById('qrBaseUrlInput').addEventListener('input', renderQrCode);
+
+    document.getElementById('btnCopyJoinLink').addEventListener('click', () => {
+      const url = getJoinUrl();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => showToast('已複製學生加入連結！', 'success')).catch(() => {});
+      } else {
+        const tmp = document.createElement('input');
+        tmp.value = url;
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        tmp.remove();
+        showToast('已複製學生加入連結！', 'success');
+      }
+    });
+
+    document.getElementById('btnMobConnectRoom').addEventListener('click', () => {
+      const code = document.getElementById('mobRoomInput').value.trim();
+      if (code) connectStudentToRoom(code);
+    });
+
+    // 手機端登入與送出時，若有連線大螢幕則同步傳送
+    const origLoginForm = document.getElementById('mobileLoginForm');
+    origLoginForm.addEventListener('submit', () => {
+      if (clientConn && clientConn.open && mobileShopId) {
+        const shop = state.shops.find(s => s.id === mobileShopId);
+        if (shop) {
+          const sel = document.getElementById('loginShopSelect').value;
+          clientConn.send({
+            type: 'PLAYER_JOIN',
+            payload: {
+              isNew: sel === '__NEW__',
+              shopId: shop.id,
+              student: shop.student,
+              team: shop.team,
+              shopName: shop.shopName,
+              productKey: shop.productKey
+            }
+          });
+        }
+      }
+    });
+
+    document.getElementById('btnMobileSubmit').addEventListener('click', () => {
+      const myShop = state.shops.find(s => s.id === mobileShopId);
+      if (myShop && clientConn && clientConn.open) {
+        clientConn.send({
+          type: 'PLAYER_SUBMIT',
+          payload: {
+            shopId: myShop.id,
+            price: myShop.pendingPrice,
+            strategy: myShop.pendingStrategy
+          }
+        });
+      }
+    });
+
+    // ==================== 商店街大道持續動畫引擎 (人物逛街大包小包 + 車輛穿梭) ====================
+    let streetAnimRaf = null;
+    const shoppers = [];
+    const vehicles = [];
+    const streetBubbles = [];
+
+    const SHOPPER_STYLES = [
+      { type: 'fashionista', coat: '#f43f5e', hair: '#451a03', skin: '#fde68a', hat: false, bagColors: ['#fb7185', '#c084fc', '#fbbf24'] },
+      { type: 'office', coat: '#6366f1', hair: '#1f2937', skin: '#fed7aa', hat: false, bagColors: ['#38bdf8', '#f472b6'] },
+      { type: 'student', coat: '#10b981', hair: '#78350f', skin: '#fef3c7', hat: true, hatColor: '#f59e0b', bagColors: ['#34d399', '#fb7185', '#60a5fa'] },
+      { type: 'gentleman', coat: '#334155', hair: '#111827', skin: '#fed7aa', hat: false, bagColors: ['#f59e0b', '#e11d48'] },
+      { type: 'influencer', coat: '#ec4899', hair: '#9333ea', skin: '#fde68a', hat: true, hatColor: '#ec4899', bagColors: ['#f43f5e', '#a855f7', '#fbbf24', '#2dd4bf'] },
+      { type: 'elder', coat: '#0ea5e9', hair: '#d1d5db', skin: '#fed7aa', hat: false, bagColors: ['#fb923c', '#f472b6'] }
+    ];
+
+    const VEHICLE_STYLES = [
+      { kind: 'van', color: '#fb7185', roof: '#fff1f2', label: '美妝' },
+      { kind: 'sedan', color: '#60a5fa', roof: '#eff6ff', label: '' },
+      { kind: 'taxi', color: '#facc15', roof: '#fef08a', label: 'TAXI' },
+      { kind: 'scooter', color: '#34d399', roof: '#ecfdf5', label: '' },
+      { kind: 'van', color: '#a78bfa', roof: '#f5f3ff', label: 'VIP' }
+    ];
+
+    function initStreetEntities() {
+      shoppers.length = 0;
+      vehicles.length = 0;
+      streetBubbles.length = 0;
+
+      for (let i = 0; i < 16; i++) {
+        const style = SHOPPER_STYLES[i % SHOPPER_STYLES.length];
+        shoppers.push({
+          t: Math.random(),
+          dir: i % 2 === 0 ? 1 : -1,
+          side: i % 2 === 0 ? 'left' : 'right',
+          laneJitter: (Math.random() - 0.5) * 0.35,
+          speed: 0.00055 + Math.random() * 0.00045,
+          phase: Math.random() * Math.PI * 2,
+          style,
+          bagCount: 2 + (i % 3) // 2~4 袋大包小包
+        });
+      }
+
+      for (let i = 0; i < 6; i++) {
+        const vStyle = VEHICLE_STYLES[i % VEHICLE_STYLES.length];
+        vehicles.push({
+          t: i / 6,
+          dir: i % 2 === 0 ? 1 : -1,
+          speed: 0.0014 + Math.random() * 0.0011,
+          style: vStyle
+        });
+      }
+    }
+
+    function resizeStreetCanvas() {
+      const wrap = document.getElementById('streetCanvasWrap');
+      const canvas = document.getElementById('streetAnimCanvas');
+      if (!wrap || !canvas) return;
+      const rect = wrap.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = Math.max(120, Math.floor(rect.width));
+      const h = Math.max(140, Math.floor(rect.height));
+      if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+      }
+    }
+
+    function drawShopper(ctx, x, y, s, now) {
+      const swing = Math.sin(now * 0.009 + s.phase) * 3.5;
+      const bob = Math.abs(Math.cos(now * 0.009 + s.phase)) * 1.5;
+
+      ctx.save();
+      ctx.translate(x, y - bob);
+
+      // 腳影
+      ctx.fillStyle = 'rgba(0,0,0,0.12)';
+      ctx.beginPath();
+      ctx.ellipse(0, 12 + bob, 7, 3, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 雙腳走動
+      ctx.strokeStyle = '#374151';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-2.5, 5);
+      ctx.lineTo(-2.5 + swing * 0.5, 11);
+      ctx.moveTo(2.5, 5);
+      ctx.lineTo(2.5 - swing * 0.5, 11);
+      ctx.stroke();
+
+      // 身體/大衣
+      ctx.fillStyle = s.style.coat;
+      ctx.beginPath();
+      ctx.roundRect(-6, -5, 12, 11, 4);
+      ctx.fill();
+
+      // 大包小包購物袋（左右手多袋）
+      const bags = s.style.bagColors;
+      for (let b = 0; b < Math.min(s.bagCount, bags.length); b++) {
+        const isLeftBag = b % 2 === 0;
+        const bx = isLeftBag ? (-10 - Math.floor(b / 2) * 3) : (6 + Math.floor(b / 2) * 3);
+        const by = 0 + (b % 2) * 1.5 + swing * 0.25;
+        ctx.fillStyle = bags[b];
+        ctx.fillRect(bx, by, 5, 7);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bx, by, 5, 7);
+        // 提把
+        ctx.strokeStyle = '#4b5563';
+        ctx.beginPath();
+        ctx.arc(bx + 2.5, by, 1.8, Math.PI, 0);
+        ctx.stroke();
+      }
+
+      // 頭與髮型
+      ctx.fillStyle = s.style.skin;
+      ctx.beginPath();
+      ctx.arc(0, -10, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = s.style.hair;
+      ctx.beginPath();
+      ctx.arc(0, -11.5, 5.2, Math.PI, 0);
+      ctx.fill();
+
+      if (s.style.hat) {
+        ctx.fillStyle = s.style.hatColor || '#f43f5e';
+        ctx.fillRect(-6, -15, 12, 3);
+        ctx.fillRect(-4, -18, 8, 3.5);
+      }
+
+      ctx.restore();
+    }
+
+    function drawVehicle(ctx, x, y, v, isVertical) {
+      ctx.save();
+      ctx.translate(x, y);
+      if (isVertical) {
+        ctx.rotate(v.dir > 0 ? Math.PI / 2 : -Math.PI / 2);
+      } else if (v.dir < 0) {
+        ctx.scale(-1, 1);
+      }
+
+      if (v.style.kind === 'scooter') {
+        // 可愛機車
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.beginPath();
+        ctx.ellipse(0, 8, 10, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#1f2937';
+        ctx.beginPath();
+        ctx.arc(-6, 6, 3.5, 0, Math.PI * 2);
+        ctx.arc(6, 6, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = v.style.color;
+        ctx.beginPath();
+        ctx.roundRect(-8, -2, 16, 7, 3);
+        ctx.fill();
+        ctx.fillStyle = '#fde68a';
+        ctx.beginPath();
+        ctx.arc(0, -6, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        const w = v.style.kind === 'van' ? 30 : 26;
+        const h = v.style.kind === 'van' ? 14 : 12;
+        ctx.fillStyle = 'rgba(0,0,0,0.16)';
+        ctx.beginPath();
+        ctx.ellipse(0, h / 2 + 3, w / 2, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 車身
+        ctx.fillStyle = v.style.color;
+        ctx.beginPath();
+        ctx.roundRect(-w / 2, -h / 2, w, h, 4);
+        ctx.fill();
+
+        // 車頂與車窗
+        ctx.fillStyle = v.style.roof;
+        ctx.beginPath();
+        ctx.roundRect(-w / 2 + 4, -h / 2 - 4, w - 10, 6, 2);
+        ctx.fill();
+
+        // 輪胎
+        ctx.fillStyle = '#111827';
+        ctx.beginPath();
+        ctx.arc(-w / 2 + 6, h / 2, 3.5, 0, Math.PI * 2);
+        ctx.arc(w / 2 - 6, h / 2, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 車燈
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(w / 2 - 2, -2, 2.5, 4);
+      }
+
+      ctx.restore();
+    }
+
+    function tickStreetAnimation(now) {
+      resizeStreetCanvas();
+      const canvas = document.getElementById('streetAnimCanvas');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = canvas.width / dpr;
+        const h = canvas.height / dpr;
+        const isVertical = h > w * 1.1;
+
+        ctx.save();
+        ctx.scale(dpr, dpr);
+
+        // 背景人行道
+        ctx.fillStyle = '#fdf2f8';
+        ctx.fillRect(0, 0, w, h);
+
+        // 根據目前情境人潮動態調整車流與行人速度（永不停止）
+        const scen = typeof getScenario === 'function' ? getScenario() : { trafficMult: 1.0 };
+        const speedFactor = Math.max(0.75, Math.min(1.45, scen.trafficMult || 1.0));
+        const activeShoppers = Math.min(shoppers.length, Math.max(8, Math.round(11 * speedFactor)));
+
+        if (isVertical) {
+          // 垂直街道：左右人行道 + 中央雙線馬路
+          const roadW = Math.min(w * 0.46, 72);
+          const roadX = (w - roadW) / 2;
+
+          ctx.fillStyle = '#475569';
+          ctx.fillRect(roadX, 0, roadW, h);
+
+          // 路緣石
+          ctx.fillStyle = '#cbd5e1';
+          ctx.fillRect(roadX - 3, 0, 3, h);
+          ctx.fillRect(roadX + roadW, 0, 3, h);
+
+          // 虛線分隔線（微幅流動感）
+          ctx.strokeStyle = '#fde047';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([12, 12]);
+          ctx.beginPath();
+          ctx.moveTo(w / 2, 0);
+          ctx.lineTo(w / 2, h);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // 行道樹點綴
+          for (let ty = 48; ty < h - 20; ty += 95) {
+            ctx.fillStyle = '#86efac';
+            ctx.beginPath();
+            ctx.arc(roadX - 10, ty, 6, 0, Math.PI * 2);
+            ctx.arc(roadX + roadW + 10, ty + 40, 6, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // 車輛行駛
+          vehicles.forEach(v => {
+            v.t += v.dir * v.speed * speedFactor;
+            if (v.t > 1.08) v.t = -0.08;
+            if (v.t < -0.08) v.t = 1.08;
+            const vx = v.dir > 0 ? (w / 2 - roadW * 0.24) : (w / 2 + roadW * 0.24);
+            const vy = v.t * h;
+            drawVehicle(ctx, vx, vy, v, true);
+          });
+
+          // 行人逛街（大包小包）
+          for (let i = 0; i < activeShoppers; i++) {
+            const s = shoppers[i];
+            s.t += s.dir * s.speed * speedFactor;
+            if (s.t > 1.06) s.t = -0.06;
+            if (s.t < -0.06) s.t = 1.06;
+            const sidewalkW = roadX - 6;
+            const baseX = s.side === 'left' ? (sidewalkW * 0.5) : (roadX + roadW + 6 + sidewalkW * 0.5);
+            const sx = Math.max(12, Math.min(w - 12, baseX + s.laneJitter * sidewalkW));
+            const sy = s.t * h;
+            drawShopper(ctx, sx, sy, s, now);
+          }
+        } else {
+          // 水平街道（手機/平板窄螢幕）：上下人行道 + 中央橫向馬路
+          const roadH = Math.min(h * 0.44, 60);
+          const roadY = (h - roadH) / 2;
+
+          ctx.fillStyle = '#475569';
+          ctx.fillRect(0, roadY, w, roadH);
+          ctx.fillStyle = '#cbd5e1';
+          ctx.fillRect(0, roadY - 3, w, 3);
+          ctx.fillRect(0, roadY + roadH, w, 3);
+
+          ctx.strokeStyle = '#fde047';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([12, 12]);
+          ctx.beginPath();
+          ctx.moveTo(0, h / 2);
+          ctx.lineTo(w, h / 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          vehicles.forEach(v => {
+            v.t += v.dir * v.speed * speedFactor;
+            if (v.t > 1.08) v.t = -0.08;
+            if (v.t < -0.08) v.t = 1.08;
+            const vx = v.t * w;
+            const vy = v.dir > 0 ? (h / 2 + roadH * 0.24) : (h / 2 - roadH * 0.24);
+            drawVehicle(ctx, vx, vy, v, false);
+          });
+
+          for (let i = 0; i < activeShoppers; i++) {
+            const s = shoppers[i];
+            s.t += s.dir * s.speed * speedFactor;
+            if (s.t > 1.06) s.t = -0.06;
+            if (s.t < -0.06) s.t = 1.06;
+            const sx = s.t * w;
+            const sy = s.side === 'left' ? (roadY * 0.52) : (roadY + roadH + (h - roadY - roadH) * 0.52);
+            drawShopper(ctx, sx, sy, s, now);
+          }
+        }
+
+        // 隨機購物小氣泡（表現市場買氣）
+        if (Math.random() < 0.03 * speedFactor && streetBubbles.length < 6) {
+          const icons = ['🛍️', '💄', '✨', '💖', '🧴'];
+          streetBubbles.push({
+            x: 16 + Math.random() * (w - 32),
+            y: 32 + Math.random() * (h - 48),
+            alpha: 1.0,
+            icon: icons[Math.floor(Math.random() * icons.length)]
+          });
+        }
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        for (let i = streetBubbles.length - 1; i >= 0; i--) {
+          const b = streetBubbles[i];
+          b.y -= 0.4;
+          b.alpha -= 0.012;
+          if (b.alpha <= 0) {
+            streetBubbles.splice(i, 1);
+            continue;
+          }
+          ctx.globalAlpha = b.alpha;
+          ctx.fillText(b.icon, b.x, b.y);
+        }
+        ctx.globalAlpha = 1;
+
+        ctx.restore();
+      }
+      streetAnimRaf = requestAnimationFrame(tickStreetAnimation);
+    }
+
+    function startStreetAnimation() {
+      if (streetAnimRaf) cancelAnimationFrame(streetAnimRaf);
+      initStreetEntities();
+      streetAnimRaf = requestAnimationFrame(tickStreetAnimation);
+    }
+
+    window.addEventListener('resize', resizeStreetCanvas);
+
+    // ==================== 啟動 ====================
+    window.onload = () => {
+      loadState();
+      const params = new URLSearchParams(window.location.search);
+      const roomParam = params.get('room');
+      if (roomParam) {
+        // 學生掃描 QR Code 進入：自動切到手機端並連線
+        document.getElementById('mobRoomInput').value = roomParam;
+        switchView('mobile');
+        connectStudentToRoom(roomParam);
+      } else {
+        initHostPeer();
+        renderAll();
+      }
+      startStreetAnimation();
+    };
+  </script>
+</body>
+</html>
