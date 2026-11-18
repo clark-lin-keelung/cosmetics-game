@@ -1177,14 +1177,17 @@
     function resolveCurrentRound() {
       if (state.phase !== 'bidding') return;
       const scen = getScenario();
+      const isFinalRound = state.currentRound >= TOTAL_ROUNDS;
       let mvpShop = null;
       let bestProfit = -9999999;
 
       state.shops.forEach(shop => {
+        if (!shop.initialStock) shop.initialStock = Math.max(100, shop.stock);
+        if (typeof shop.surplusCash !== 'number') shop.surplusCash = 0;
+
         // 時間到未調整者，以原價視為結束調整
         const newPrice = shop.submitted ? shop.pendingPrice : shop.currentPrice;
         const strategy = shop.submitted ? shop.pendingStrategy : 'status_quo';
-        const prod = PRODUCTS[shop.productKey];
         const cost = shop.unitCost;
         const pctChange = ((newPrice - shop.currentPrice) / shop.currentPrice) * 100;
         const tier = getPriceTier(newPrice);
@@ -1195,61 +1198,95 @@
         else if (scen.expectedDir === 'up') dirCorrect = pctChange >= 3;
         else dirCorrect = Math.abs(pctChange) <= 10;
 
-        // 2. 判斷單價區間是否有利於本情境 (高 >1000, 中 500-1000, 低 <500)
-        let tierMult = 1.0;
-        if (tier.key === scen.favorTier) tierMult = 1.32;
-        else if (tier.key === 'mid') tierMult = 1.05;
-        else tierMult = 0.78;
+        // 2. 判斷單價區間是否適合本情境 (高 >1000, 中 500-1000, 低 <500)
+        const isFavorableTier = (tier.key === scen.favorTier);
+        const isNeutralTier = (!isFavorableTier && tier.key === 'mid');
+        const rightStrat = scen.optimalStrategies.includes(strategy);
 
-        // 3. 市場接受度與銷售量計算
-        let baseVol = Math.max(40, Math.round(shop.stock * 0.22));
-        let demandMult = scen.trafficMult * tierMult;
+        // 3. 銷售量乘數：適合單價 + 方向正確 -> 銷量大增；不利單價或方向錯誤 -> 銷量萎縮
+        let baseVol = Math.max(35, Math.round(shop.initialStock * 0.24));
+        let demandMult = scen.trafficMult;
 
         if (scen.round === 6 && (strategy === 'unethical' || pctChange >= 22)) {
-          // 觸犯道德法律紅線
-          demandMult *= 0.25;
-        } else if (dirCorrect) {
-          demandMult *= 1.38;
+          demandMult *= 0.20;
+        } else if (isFavorableTier && dirCorrect) {
+          demandMult *= 1.48; // 適合單價且方向正確：銷售量大幅增加
+        } else if (isFavorableTier && !dirCorrect) {
+          demandMult *= 0.70; // 適合單價但方向錯誤：銷售量下降
+        } else if (!isFavorableTier && dirCorrect) {
+          demandMult *= (isNeutralTier ? 0.92 : 0.72); // 不利單價但方向正確：銷量有限
         } else {
-          demandMult *= 0.68;
+          demandMult *= (isNeutralTier ? 0.62 : 0.45); // 不利單價且方向錯誤：銷量慘淡
         }
 
-        // 策略契合度與畸零尾數加成
-        const rightStrat = scen.optimalStrategies.includes(strategy);
-        if (rightStrat) demandMult *= 1.15;
-        if (newPrice % 10 === 9 || newPrice % 10 === 5) demandMult *= 1.05;
+        if (rightStrat) demandMult *= 1.12;
+        if (newPrice % 10 === 9 || newPrice % 10 === 5) demandMult *= 1.04;
 
-        // 實際銷量不超過目前庫存
-        const qty = Math.min(shop.stock, Math.max(5, Math.round(baseVol * demandMult)));
+        // 實際銷售量不超過目前庫存
+        const qty = Math.min(shop.stock, Math.max(shop.stock > 0 ? 5 : 0, Math.round(baseVol * demandMult)));
         const revenue = newPrice * qty;
         const profit = (newPrice - cost) * qty;
 
-        // 分數計算：方向正確有利潤，且利潤越高分數越高！
+        // 累積可用盈餘現金（正利潤才可投入再生產）
+        if (profit > 0) shop.surplusCash += profit;
+
+        // 4. 分數計算（依單價適合度與方向正確與否區分幅度）
         let scoreDelta = 0;
         let comment = '';
         if (scen.round === 6 && (strategy === 'unethical' || pctChange >= 22)) {
           scoreDelta = -30;
-          comment = '⚠️ 觸犯 Ch.9 §9.4 價格協定/誘餌式訂價紅線，遭消保單位裁罰扣分！';
-        } else if (profit <= 0) {
-          scoreDelta = -10;
-          comment = '📉 售價低於或等於成本造成無利潤虧損，請注意成本底線！';
-        } else if (dirCorrect) {
-          // 利潤越高分數越高 (每 $2,000 利潤 +1 分，加上方向正確基礎 +20 分與策略契合 +10 分)
-          scoreDelta = 20 + Math.min(60, Math.round(profit / 1800)) + (rightStrat ? 10 : 0);
-          comment = `🌟 調價方向正確且符合「${tier.label}」市場趨勢！創造 $${profit.toLocaleString()} 利潤，獲得高分！`;
+          comment = '⚠️ 觸犯 Ch.9 §9.4 價格協定/誘餌式訂價紅線，遭裁罰扣 30 分！';
+        } else if (profit < 0) {
+          scoreDelta = -15;
+          comment = '📉 售價低於成本造成虧損，扣 15 分！';
+        } else if (isFavorableTier && dirCorrect) {
+          // 適合單價 + 方向正確：銷量大增、加分幅度最大
+          scoreDelta = 24 + Math.min(55, Math.round(profit / 1600)) + (rightStrat ? 10 : 0);
+          comment = `🌟 完美命中！商品屬「${tier.label}」正好符合本情境且調價方向正確，銷量大增（${qty}件），大加 ${scoreDelta} 分！`;
+        } else if (!isFavorableTier && dirCorrect) {
+          // 不利單價 + 方向正確：加分幅度不大
+          const smallGain = Math.min(10, Math.max(3, Math.round(profit / 6000) + (isNeutralTier ? 4 : 2)));
+          scoreDelta = smallGain;
+          comment = `👍 調價方向正確，但本情境較不利「${tier.label}」商品銷售，加分幅度有限（+${smallGain} 分）。`;
         } else {
-          scoreDelta = Math.max(2, Math.round(profit / 4000));
-          comment = `⚖️ 調價方向與本回合市場情境不符，市場接受度較低（利潤 $${profit.toLocaleString()}）。`;
+          // 方向錯誤：必須扣分
+          const penalty = isFavorableTier ? -8 : -16;
+          scoreDelta = penalty;
+          comment = `❌ 調價方向錯誤（${isFavorableTier ? '雖單價適合但方向錯' : '單價不利且方向錯'}），銷量受挫，扣 ${Math.abs(penalty)} 分！`;
         }
 
         shop.prevPrice = shop.currentPrice;
         shop.currentPrice = newPrice;
         shop.stock = Math.max(0, shop.stock - qty);
-        // 若庫存偏低，自動以賺取的現金補貨維持後續回合遊玩
-        if (shop.stock < 40) {
-          const restock = Math.floor(Math.max(20000, profit) / cost);
-          shop.stock += restock;
+
+        // 5. 商品銷售完畢時，依據盈餘再投入生產
+        if (shop.stock <= 0) {
+          const newUnits = Math.floor(shop.surplusCash / cost);
+          if (newUnits > 0) {
+            shop.surplusCash -= newUnits * cost;
+            shop.stock += newUnits;
+            comment += ` 🏭 庫存已售罄！已投入盈餘重新生產 ${newUnits.toLocaleString()} 件商品。`;
+          } else {
+            comment += ' ⚠️ 庫存已售罄且盈餘不足以再投入生產！';
+          }
         }
+
+        // 6. 最終回合（第 10 回合）結算：依剩餘庫存比例進行獎懲
+        if (isFinalRound) {
+          const stockRatio = shop.stock / (shop.initialStock || 100);
+          let invAdj = 0;
+          if (stockRatio <= 0.25) {
+            invAdj = Math.round(((0.25 - stockRatio) / 0.25) * 30);
+            comment += ` 📦 最終庫存極低（剩 ${shop.stock} 件，庫存率 ${Math.round(stockRatio * 100)}%），額外加 ${invAdj} 分！`;
+          } else if (stockRatio > 0.40) {
+            invAdj = -Math.min(40, Math.round((stockRatio - 0.40) * 55));
+            comment += ` 📦 最終庫存過多滯銷（剩 ${shop.stock} 件，庫存率 ${Math.round(stockRatio * 100)}%），依比例扣 ${Math.abs(invAdj)} 分！`;
+          } else {
+            comment += ` 📦 最終庫存適中（剩 ${shop.stock} 件），不額外加減分。`;
+          }
+          scoreDelta += invAdj;
+        }
+
         shop.totalRevenue += revenue;
         shop.totalProfit += profit;
         shop.lastRevenue = revenue;
@@ -1265,7 +1302,7 @@
         }
       });
 
-      state.phase = state.currentRound >= TOTAL_ROUNDS ? 'finished' : 'resolved';
+      state.phase = isFinalRound ? 'finished' : 'resolved';
       state.roundEndTime = 0;
       state.lastResolution = {
         round: scen.round,
@@ -1276,7 +1313,7 @@
       saveState();
       playCashSound();
       renderAll();
-      showToast(`第 ${scen.round} 回合時間到！已公布策略解答與分數`, 'success');
+      showToast(isFinalRound ? '🏆 第 10 回合最終結算完成（含庫存獎懲）！' : `第 ${scen.round} 回合時間到！已公布解答與分數`, 'success');
     }
 
     function nextRound() {
@@ -1398,7 +1435,7 @@
 
         resBanner.classList.remove('hidden');
         document.getElementById('resHeadline').textContent = `${scen.title} — 市場結算`;
-        document.getElementById('resTheoryExplain').textContent = `本回合市場有利於「${scen.favorTierLabel}」，所有同學已依調價方向與獲利表現完成計分！`;
+        document.getElementById('resTheoryExplain').textContent = state.phase === 'finished' ? `🏆 第 10 回合最終結算完成！本回合有利於「${scen.favorTierLabel}」，並已依各店最終剩餘庫存比例完成加扣分！` : `本回合市場有利於「${scen.favorTierLabel}」，單價符合且方向正確者銷量大增並大幅加分；不利單價即使方向對僅小幅加分，方向錯誤則扣分！`;
         document.getElementById('resOptimalHint').textContent = scen.answerText;
         if (state.lastResolution) {
           document.getElementById('resMvpBadge').textContent = `👑 本回合利潤王：${state.lastResolution.mvpName} ($${Number(state.lastResolution.mvpProfit).toLocaleString()})`;
@@ -1743,7 +1780,9 @@
             team: s.team,
             productKey: s.productKey,
             unitCost: s.unitCost,
+            initialStock: Math.floor(100000 / s.unitCost),
             stock: Math.floor(100000 / s.unitCost),
+            surplusCash: 0,
             currentPrice: s.price,
             prevPrice: s.price,
             pendingPrice: s.price,
@@ -1803,7 +1842,9 @@
         team,
         productKey,
         unitCost,
+        initialStock: stock,
         stock,
+        surplusCash: 0,
         currentPrice: initPrice,
         prevPrice: initPrice,
         pendingPrice: initPrice,
