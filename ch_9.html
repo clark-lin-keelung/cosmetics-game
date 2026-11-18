@@ -99,8 +99,11 @@
           <div>
             <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
               <div class="flex flex-wrap items-center gap-2">
-                <span id="hostRoundBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-rose-600 text-white">
-                  第 1 / 7 回合
+                <span id="hostRoundBadge" class="px-3 py-1 rounded-full text-xs sm:text-sm font-bold bg-rose-600 text-white">
+                  第 1 / 10 回合
+                </span>
+                <span id="hostDiffBadge" class="px-2.5 py-1 rounded-full text-xs sm:text-sm font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  🟢 低難度
                 </span>
                 <span id="hostChapterTag" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                   待機中
@@ -122,10 +125,10 @@
               </div>
             </div>
 
-            <h2 id="hostScenarioTitle" class="text-lg sm:text-xl font-extrabold text-gray-900 mb-1.5">
+            <h2 id="hostScenarioTitle" class="text-2xl sm:text-3xl font-black text-gray-900 mb-2.5 leading-snug">
               歡迎來到「韓國明洞化妝品一條街」！
             </h2>
-            <p id="hostScenarioDesc" class="text-sm text-gray-600 leading-relaxed mb-4">
+            <p id="hostScenarioDesc" class="text-base sm:text-lg text-gray-800 leading-relaxed font-medium mb-4">
               請同學先掃描 QR Code 選擇組別、為商店命名、選擇主要商品並設定初始成本與售價（起始資本皆為 $100,000）。全員就緒後，請老師點擊下方「📢 開始出題」啟動 2 分鐘倒數！
             </p>
           </div>
@@ -721,107 +724,354 @@
       return { key: 'low', label: '低單價 (<$500)', badgeCls: 'bg-blue-100 text-blue-700' };
     }
 
-    // ==================== 7 個連續性市場情境（緊扣 Ch.9 投影片） ====================
-    const SCENARIOS = [
+    // ==================== 30 種分級市場情境題庫（低/中/高難度各 10 題，緊扣 Ch.9） ====================
+    const TOTAL_ROUNDS = 10;
+    const SCENARIO_POOL = [
+      // ---------- 【低難度】10 題：單一明確線索 ----------
       {
-        round: 1,
-        chapter: '§9.2.3.1 滲透訂價 vs 刮脂訂價',
-        title: '第 1 題｜明洞觀光客回流・平價掃貨潮',
-        desc: '韓國明洞剛迎來大量自由行學生與小資族，大家喜歡大量掃貨美妝伴手禮，對價格非常敏感！請問你應該調降售價搶市占，還是漲價？',
-        trafficLabel: '🔥 旺盛 (120%)',
-        trafficMult: 1.2,
-        favorTier: 'low',
-        favorTierLabel: '💙 有利低單價 (<$500)',
-        expectedDir: 'down', // 'down' | 'up' | 'hold'
-        directionHint: '📉 適合降價滲透',
+        id: 'L1', difficulty: 'low', diffLabel: '🟢 低難度',
+        chapter: '§9.2.3.1 滲透訂價',
+        title: '明洞觀光客大回流・平價掃貨潮',
+        desc: '韓國明洞迎來大批學生與自由行小資族，人潮眾多但預算有限、對價格非常敏感，大家都在找高 CP 值的平價美妝伴手禮！',
+        trafficLabel: '🔥 旺盛 (125%)', trafficMult: 1.25,
+        favorTier: 'low', favorTierLabel: '💙 有利低單價 (<$500)',
+        expectedDir: 'down', directionHint: '📉 適合降價滲透',
         optimalStrategies: ['penetration', 'discount'],
-        answerText: '【正確策略：§9.2.3.1 滲透訂價 / 銷售極大化】小資觀光客價格彈性高，應「適度降價 (-5%~-20%)」吸引買氣與市占，且「低單價 (<$500)」及「中單價」商品最受歡迎！'
+        answerText: '【§9.2.3.1 滲透訂價】小資觀光客價格彈性高，應「適度降價 (-5%~-20%)」搶攻銷量與市占，低單價 (<$500) 商品最吃香！'
       },
       {
-        round: 2,
-        chapter: '§9.1 非貨幣代價 & §9.2.2 威望性商品',
-        title: '第 2 題｜美妝節目採訪・明洞排隊爆紅',
-        desc: '昨晚韓國美妝節目報導明洞這條街！今天門口大排長龍，顧客等待時間變長（非貨幣代價升高），但高端貴婦客群願意花大錢買頂級保養品，出現「越貴越想買」的威望效應！',
-        trafficLabel: '🚀 爆棚 (140%)',
-        trafficMult: 1.4,
-        favorTier: 'high',
-        favorTierLabel: '💜 有利高單價 (>$1000)',
-        expectedDir: 'up',
-        directionHint: '📈 適合調漲刮脂',
-        optimalStrategies: ['skimming'],
-        answerText: '【正確策略：§9.1 非貨幣代價 & §9.2.2 威望訂價】排隊屬於非貨幣代價，適度「調漲售價 (+8%~+25%)」可篩選客群並提升利潤；此時「高單價 (>$1000)」商品最具威望優勢！'
-      },
-      {
-        round: 3,
-        chapter: '§9.2.4.1 成本壓力 & §9.2.4.3 畸零訂價',
-        title: '第 3 題｜進口原料漲價・守住價格底線',
-        desc: '國際物流與美妝包材成本上揚，進貨成本壓力增加！但顧客對直接暴漲很反感，若小幅微調價格並將尾數設為 5 或 9（例如 $499、$895），較容易被市場接受。',
-        trafficLabel: '👥 平穩 (100%)',
-        trafficMult: 1.0,
-        favorTier: 'mid',
-        favorTierLabel: '💛 有利中單價 ($500-$1000)',
-        expectedDir: 'up',
-        directionHint: '🏷️ 小幅調漲＋尾數 5/9',
-        optimalStrategies: ['odd', 'status_quo'],
-        answerText: '【正確策略：§9.2.4.3 心理畸零訂價】成本上升時需守住價格底線並「小幅微調 (+3%~+12%)」，搭配尾數 5 或 9 的畸零訂價降低心理抗拒，「中單價 ($500-$1000)」最穩健！'
-      },
-      {
-        round: 4,
-        chapter: '§9.2.4.3 犧牲打 & §9.2.5.1 季節性折扣',
-        title: '第 4 題｜樂天免稅店大特賣・人潮流失危機',
-        desc: '隔壁樂天免稅店今天祭出超級折扣，明洞街道人潮明顯減少！顧客都在比價，如果死守高價甚至漲價，店裡會完全沒客人。你必須降價反映並用優惠引流！',
-        trafficLabel: '📉 危機 (80%)',
-        trafficMult: 0.8,
-        favorTier: 'low',
-        favorTierLabel: '💙 有利低單價 (<$500)',
-        expectedDir: 'down',
-        directionHint: '📉 必須降價促銷搶客',
+        id: 'L2', difficulty: 'low', diffLabel: '🟢 低難度',
+        chapter: '§9.2.4.3 犧牲打訂價',
+        title: '樂天免稅店週年慶・人潮流失危機',
+        desc: '隔壁大型百貨與免稅店今天舉辦超低價特賣，明洞街上顧客明顯變少，留下來的客人都在到處比價，不降價幾乎沒人願意進店！',
+        trafficLabel: '📉 危機 (80%)', trafficMult: 0.80,
+        favorTier: 'low', favorTierLabel: '💙 有利低單價 (<$500)',
+        expectedDir: 'down', directionHint: '📉 必須降價引流',
         optimalStrategies: ['discount', 'penetration'],
-        answerText: '【正確策略：§9.2.4.3 犧牲打訂價 / §9.2.5.1 折扣】面對強敵分流，必須「果斷降價 (-10%~-25%)」搶回人潮，此時「低單價 (<$500)」商品最容易帶動大量成交與總利潤！'
+        answerText: '【§9.2.4.3 犧牲打 / §9.2.5.1 折扣】面對強敵分流，應果斷「降價促銷 (-10%~-25%)」吸引顧客進店，避免門可羅雀。'
       },
       {
-        round: 5,
-        chapter: '§9.3 多項產品訂價（互補與搭售）',
-        title: '第 5 題｜促銷後疲乏・組合套裝拉高客單價',
-        desc: '大特賣結束後顧客荷包變緊，單買意願下降。現在流行「買粉盒配粉蕊（互補）」或「保養搭售禮盒」，只要維持合理價位或微幅讓利，就能讓顧客一次帶走多件！',
-        trafficLabel: '🛍️ 回升 (105%)',
-        trafficMult: 1.05,
-        favorTier: 'mid',
-        favorTierLabel: '💛 有利中單價 ($500-$1000)',
-        expectedDir: 'hold',
-        directionHint: '🎁 維持/微調搭售優惠',
+        id: 'L3', difficulty: 'low', diffLabel: '🟢 低難度',
+        chapter: '§9.2.2 威望性商品',
+        title: '頂級貴婦團包車來訪・專挑高檔貨',
+        desc: '今天有數台 VIP 觀光巴士停在明洞，車上全是預算充裕的高端貴婦團，她們認為「貴才代表有效、有面子」，便宜貨反而讓她們懷疑品質！',
+        trafficLabel: '💎 精品潮 (130%)', trafficMult: 1.30,
+        favorTier: 'high', favorTierLabel: '💜 有利高單價 (>$1000)',
+        expectedDir: 'up', directionHint: '📈 適合調漲威望價',
+        optimalStrategies: ['skimming'],
+        answerText: '【§9.2.2.1 威望性商品 / §9.2.4.3 威望訂價】高消費客群重視身分與品質，適度「調漲售價 (+10%~+25%)」反而提升購買意願，高單價商品大獲全勝！'
+      },
+      {
+        id: 'L4', difficulty: 'low', diffLabel: '🟢 低難度',
+        chapter: '§9.1 非貨幣代價',
+        title: '網紅直播爆紅・店門口大排長龍',
+        desc: '昨晚知名美妝博主推薦這條街，今天每家店門口都排滿長長人龍，顧客抱怨等太久腳好酸（非貨幣代價太高），願意多付一點錢省時間！',
+        trafficLabel: '🚀 爆棚 (140%)', trafficMult: 1.40,
+        favorTier: 'high', favorTierLabel: '💜 有利高單價 (>$1000)',
+        expectedDir: 'up', directionHint: '📈 調漲平衡人潮',
+        optimalStrategies: ['skimming', 'status_quo'],
+        answerText: '【§9.1 非貨幣代價】等待時間與精力耗損是顧客的非貨幣代價。需求遠大於供給時，適度「調漲 (+8%~+20%)」能提高單件利潤並緩解排隊。'
+      },
+      {
+        id: 'L5', difficulty: 'low', diffLabel: '🟢 低難度',
+        chapter: '§9.2.1.3 維持現況導向',
+        title: '淡季平常日・市場平靜無波',
+        desc: '今天是平凡的週二下午，沒有特別活動也沒有成本波動，街上各家店價格透明穩定，顧客對現有價格已經形成固定習慣。',
+        trafficLabel: '👥 平穩 (100%)', trafficMult: 1.00,
+        favorTier: 'mid', favorTierLabel: '💛 有利中單價 ($500-$1000)',
+        expectedDir: 'hold', directionHint: '⚖️ 維持現況不亂動',
+        optimalStrategies: ['status_quo', 'odd'],
+        answerText: '【§9.2.1.3 維持現況 / §9.2.4.3 習慣訂價】市場平穩且價格透明時，維持原價或僅微調 (±5% 內) 可避免無謂價格戰，維持穩定利潤。'
+      },
+      {
+        id: 'L6', difficulty: 'low', diffLabel: '🟢 低難度',
+        chapter: '§9.2.4.3 心理畸零訂價',
+        title: '小資發薪日・精打細算比價心理',
+        desc: '剛過發薪日，上班族想買美妝犒賞自己，但心理上對整數關卡（如 $500、$1000）特別敏感，看到 $499 或 $295 會覺得划算很多！',
+        trafficLabel: '🛍️ 溫和 (110%)', trafficMult: 1.10,
+        favorTier: 'mid', favorTierLabel: '💛 有利中單價 ($500-$1000)',
+        expectedDir: 'hold', directionHint: '🏷️ 尾數 5 或 9 畸零價',
+        optimalStrategies: ['odd'],
+        answerText: '【§9.2.4.3 心理畸零訂價】將售價尾數設為 5 或 9（如 $499、$895）能產生「少一位數」的心理錯覺，微調價格即可有效刺激買氣！'
+      },
+      {
+        id: 'L7', difficulty: 'low', diffLabel: '🟢 低難度',
+        chapter: '§9.4.1 & §9.4.2 合法與道德性',
+        title: '消保官突擊巡查・嚴抓聯合漲價',
+        desc: '有幾家同業私下傳紙條邀約大家「今天一起漲價 30%（水平價格協定）」，但街口正好有韓國公平會與消保官在錄影巡邏！',
+        trafficLabel: '👀 巡查中 (100%)', trafficMult: 1.00,
+        favorTier: 'mid', favorTierLabel: '💛 誠信中/低單價',
+        expectedDir: 'hold', directionHint: '🛡️ 拒絕聯合漲價',
+        optimalStrategies: ['status_quo', 'odd'],
+        answerText: '【§9.4 價格協定與道德】水平價格協定屬違法行為！拒絕聯合暴漲並維持誠信定價，才能保住商譽與積分。'
+      },
+      {
+        id: 'L8', difficulty: 'low', diffLabel: '🟢 低難度',
+        chapter: '§9.2.5.1 季節性折扣',
+        title: '換季庫存清倉・夏日防曬彩妝過剩',
+        desc: '季節轉換，夏天款式的清爽彩妝與防曬面臨過季壓力，如果不趕快趁現在打折出清，下週就要變成滯銷品了！',
+        trafficLabel: '🍂 換季 (95%)', trafficMult: 0.95,
+        favorTier: 'low', favorTierLabel: '💙 有利低單價 (<$500)',
+        expectedDir: 'down', directionHint: '📉 季節性折扣出清',
+        optimalStrategies: ['discount', 'penetration'],
+        answerText: '【§9.2.5.1 季節性折扣】淡季或換季時給予明確降價優惠 (-10%~-20%)，能加速存貨變現並維持營業額。'
+      },
+      {
+        id: 'L9', difficulty: 'low', diffLabel: '🟢 低難度',
+        chapter: '§9.3 搭售訂價',
+        title: '情人節送禮潮・禮盒包裝最搶手',
+        desc: '情人節前夕情侶湧入明洞，大家不想只買單支產品，更想一次買「保養＋彩妝組合」或成套禮品，對總價微調接受度高！',
+        trafficLabel: '💝 節慶 (125%)', trafficMult: 1.25,
+        favorTier: 'mid', favorTierLabel: '💛 有利中單價 ($500-$1000)',
+        expectedDir: 'hold', directionHint: '🎁 搭售組合微調',
+        optimalStrategies: ['bundle'],
+        answerText: '【§9.3 搭售訂價】將兩項以上產品組合銷售並設計套裝價格，能大幅提升客單價與總利潤。'
+      },
+      {
+        id: 'L10', difficulty: 'low', diffLabel: '🟢 低難度',
+        chapter: '§9.2.1.5 宣示品質目標',
+        title: '韓國美妝評鑑認證・榮獲年度金獎',
+        desc: '明洞商店街今天獲得韓國官方美妝安全與品質金獎認證，媒體報導主打「高品質成分」，消費者願意為好品質多付一點錢！',
+        trafficLabel: '👑 品質熱 (120%)', trafficMult: 1.20,
+        favorTier: 'high', favorTierLabel: '💜 有利高單價 (>$1000)',
+        expectedDir: 'up', directionHint: '📈 適度漲價宣示品質',
+        optimalStrategies: ['skimming'],
+        answerText: '【§9.2.1.5 宣示品質導向】獲得權威認證時，適度調高售價 (+5%~+15%) 可強化高品質品牌形象，高單價商品獲利最佳。'
+      },
+
+      // ---------- 【中難度】10 題：雙重條件權衡 ----------
+      {
+        id: 'M1', difficulty: 'medium', diffLabel: '🟡 中難度',
+        chapter: '§9.2.4.1 成本加成 vs 認知價值',
+        title: '進口玻尿酸漲價・但顧客只肯小幅接受',
+        desc: '上游原料與玻璃瓶器上漲 20%，壓縮你的毛利；不過昨天才剛漲過一波，若一次漲太兇顧客會轉向對面店家，但完全不漲又可能虧本。',
+        trafficLabel: '⚖️ 觀望 (100%)', trafficMult: 1.00,
+        favorTier: 'mid', favorTierLabel: '💛 有利中單價 ($500-$1000)',
+        expectedDir: 'up', directionHint: '🏷️ 小幅調漲＋畸零尾數',
+        optimalStrategies: ['odd', 'status_quo'],
+        answerText: '【§9.2.4.1 價格底線 & §9.2.4.3 畸零訂價】成本上漲須守住底線，建議「小幅調漲 (+3%~+10%)」並用尾數 5/9 降低顧客心理反彈。'
+      },
+      {
+        id: 'M2', difficulty: 'medium', diffLabel: '🟡 中難度',
+        chapter: '§9.2.3.2 彈性訂價 vs 競爭平位',
+        title: '對面名店突襲降價・但你口碑較佳',
+        desc: '對面競爭對手突然宣布全館 8 折搶客，雖然你的忠實顧客沒馬上跑光，但新客人明顯被吸走一半。你應該跟進小幅讓利還是硬撐漲價？',
+        trafficLabel: '⚡ 競爭激烈 (95%)', trafficMult: 0.95,
+        favorTier: 'low', favorTierLabel: '💙 有利低單價 (<$500)',
+        expectedDir: 'down', directionHint: '📉 小幅跟進降價防流失',
+        optimalStrategies: ['discount', 'penetration'],
+        answerText: '【§9.2.3.2 彈性訂價】面對競爭者強力降價，採彈性訂價「小幅調降 (-5%~-15%)」能守住客源又不至於流血殺價。'
+      },
+      {
+        id: 'M3', difficulty: 'medium', diffLabel: '🟡 中難度',
+        chapter: '§9.3 互補訂價策略',
+        title: '氣墊粉底與替換粉蕊・耗材銷售期',
+        desc: '上週大家買了粉盒與主瓶，這週回頭客想買「替換粉蕊」或配套刷具。如果主商品與互補品價格差距太大會嚇跑回頭客，該怎麼定價？',
+        trafficLabel: '🔄 回購潮 (110%)', trafficMult: 1.10,
+        favorTier: 'mid', favorTierLabel: '💛 有利中單價 ($500-$1000)',
+        expectedDir: 'hold', directionHint: '🎁 互補搭售微幅讓利',
         optimalStrategies: ['bundle', 'odd'],
-        answerText: '【正確策略：§9.3 互補訂價與搭售訂價】透過組合優惠讓「中單價 ($500-$1000)」商品呈現高 CP 值，價格維持在 -8% ~ +5% 微調即可放大營業額與利潤！'
+        answerText: '【§9.3 互補訂價】針對互補品維持合理微幅優惠 (-5%~+5%)，能鎖定長期回購客群並拉高總利潤。'
       },
       {
-        round: 6,
-        chapter: '§9.4 訂價決策的合法性及道德性',
-        title: '第 6 題｜同業私下揪團漲價・消保官突擊檢查',
-        desc: '街上有人私下提議「大家一起聯合漲價 30%（水平價格協定）」，或用「超低價假廣告誘騙進店（誘餌式訂價）」。韓國公平會今天正好在明洞巡查！',
-        trafficLabel: '👀 巡查中 (105%)',
-        trafficMult: 1.05,
-        favorTier: 'mid',
-        favorTierLabel: '💛 誠信中/低單價最安心',
-        expectedDir: 'hold',
-        directionHint: '🛡️ 守法誠信・切勿聯合暴漲',
-        optimalStrategies: ['status_quo', 'odd', 'bundle'],
-        answerText: '【正確策略：§9.4 合法與道德訂價】絕不可選「聯合漲價/誘餌式促銷」或暴漲超過 20%！維持誠信定價（微調 -5%~+5%）才能保護商譽並穩健獲利。'
+        id: 'M4', difficulty: 'medium', diffLabel: '🟡 中難度',
+        chapter: '§9.2.5.2 地理訂價・運費吸收',
+        title: '海外代購與免運大戰・外縣市訂單湧入',
+        desc: '除了現場客人，今天收到大量外縣市與海外代購詢問，但競爭對手紛紛喊出「滿額免運（運費吸收）」，顧客希望商品總價不要比現場貴太多！',
+        trafficLabel: '📦 跨區潮 (115%)', trafficMult: 1.15,
+        favorTier: 'mid', favorTierLabel: '💛 有利中單價 ($500-$1000)',
+        expectedDir: 'down', directionHint: '📉 微幅讓利吸收運費',
+        optimalStrategies: ['discount', 'bundle'],
+        answerText: '【§9.2.5.2 運費吸收訂價】為留住遠距離顧客，適度降價或吸收部分運費 (-5%~-12%) 可擴大銷售半徑與總營業額。'
       },
       {
-        round: 7,
-        chapter: '§9.2.1 訂價目標與價值訂價 (EDLP)',
-        title: '第 7 題｜明洞年度美妝大賞・最終決戰',
-        desc: '最後一天評比！消費力強的精品客與忠實顧客齊聚明洞，重視產品認知價值與品牌質感。請做出最後一次精準調價，衝刺最高利潤與團隊總分！',
-        trafficLabel: '👑 盛典 (135%)',
-        trafficMult: 1.35,
-        favorTier: 'high',
-        favorTierLabel: '💜 有利高/中單價精品',
-        expectedDir: 'up',
-        directionHint: '📈 適度提升品牌價值',
-        optimalStrategies: ['skimming', 'bundle', 'status_quo'],
-        answerText: '【正確策略：§9.2.1.5 宣示品質 & §9.2.4.3 認知價值訂價】決賽日人潮多且重視品質，適度「微幅調升 (+5%~+15%)」並展現高品質定位，「高單價」與「中單價」都能創造亮眼利潤！'
+        id: 'M5', difficulty: 'medium', diffLabel: '🟡 中難度',
+        chapter: '§9.2.2 需求彈性差異',
+        title: '韓劇女主角同款口紅與精華液・熱搜第一',
+        desc: '昨晚播出的韓劇大結局，女主角擦的色號與精華液登上熱搜！雖然一般平價面膜沒受影響，但彩妝精華專櫃擠滿指定購買「同款」的粉絲。',
+        trafficLabel: '📺 熱搜效應 (130%)', trafficMult: 1.30,
+        favorTier: 'high', favorTierLabel: '💜 有利高單價 (>$1000)',
+        expectedDir: 'up', directionHint: '📈 熱銷品需求彈性低可漲',
+        optimalStrategies: ['skimming'],
+        answerText: '【§9.2.2.1 需求彈性】追星粉絲對特定熱門款價格敏感度極低（彈性小），適度調漲 (+8%~+18%) 可大幅提高利潤！'
+      },
+      {
+        id: 'M6', difficulty: 'medium', diffLabel: '🟡 中難度',
+        chapter: '§9.2.1.4 短期求生 vs §9.2.4 價值訂價',
+        title: '連續下雨三天・街上只剩零星散客',
+        desc: '首爾連下三天暴雨，明洞人潮銳減剩不到七成，許多店家現金週轉吃緊！留在街上的少數客人想撿便宜，不給甜頭根本不進門。',
+        trafficLabel: '🌧️ 暴雨淡日 (75%)', trafficMult: 0.75,
+        favorTier: 'low', favorTierLabel: '💙 有利低單價 (<$500)',
+        expectedDir: 'down', directionHint: '📉 短期降價求生換現金',
+        optimalStrategies: ['discount', 'penetration'],
+        answerText: '【§9.2.1.4 短期求生導向】面對突發人潮冰凍，短期降價 (-10%~-20%) 刺激成交、換取現金流度過低潮是必要策略。'
+      },
+      {
+        id: 'M7', difficulty: 'medium', diffLabel: '🟡 中難度',
+        chapter: '§9.2.4.2 流行訂價法',
+        title: '明洞協會公布「街區公定參考價」',
+        desc: '為了避免惡性倒閉潮，商圈公會發布各品類建議參考價，多數店家選擇向全街平均價靠攏；此時單獨開出天價會顯得格格不入。',
+        trafficLabel: '🏛️ 秩序期 (100%)', trafficMult: 1.00,
+        favorTier: 'mid', favorTierLabel: '💛 有利中單價 ($500-$1000)',
+        expectedDir: 'hold', directionHint: '⚖️ 流行訂價跟隨市場',
+        optimalStrategies: ['status_quo'],
+        answerText: '【§9.2.4.2 流行訂價法】在價格透明度高且存在價格領袖的市場，維持與同業一致的價格水準能確保穩定客源。'
+      },
+      {
+        id: 'M8', difficulty: 'medium', diffLabel: '🟡 中難度',
+        chapter: '§9.2.5.1 數量折扣與現金還本',
+        title: '企業福委會採購團・一次要買 50 組',
+        desc: '今天有科技公司福委會來採購員工禮品，採購量很大但要求給予「數量折扣」或「現金回饋」，若不讓利他們就會轉去別家批發商。',
+        trafficLabel: '🏢 團購大單 (125%)', trafficMult: 1.25,
+        favorTier: 'mid', favorTierLabel: '💛 有利中單價 ($500-$1000)',
+        expectedDir: 'down', directionHint: '📉 給予數量折扣接大單',
+        optimalStrategies: ['discount', 'bundle'],
+        answerText: '【§9.2.5.1 數量折扣】對大宗採購給予適度單價折讓 (-5%~-15%)，雖單件毛利略降，但總銷量與總利潤大幅攀升！'
+      },
+      {
+        id: 'M9', difficulty: 'medium', diffLabel: '🟡 中難度',
+        chapter: '§9.2.4.3 需求回溯訂價法',
+        title: 'Z 世代預算天花板・明確價格上限',
+        desc: '街訪顯示今天的主力客群大學生「心中能接受的最高消費就是單件不超過 500 元」，超過這個門檻看都不看，低於門檻則買氣旺盛！',
+        trafficLabel: '🎓 學生潮 (115%)', trafficMult: 1.15,
+        favorTier: 'low', favorTierLabel: '💙 有利低單價 (<$500)',
+        expectedDir: 'down', directionHint: '📉 降價貼近目標客預算',
+        optimalStrategies: ['penetration', 'odd'],
+        answerText: '【§9.2.4.3 需求回溯訂價】先鎖定消費者可接受的最終消費價格（<$500），再回推調整售價與成本控管，低單價商品大勝！'
+      },
+      {
+        id: 'M10', difficulty: 'medium', diffLabel: '🟡 中難度',
+        chapter: '§9.4.3 差別訂價（時間區隔）',
+        title: '星光夜購時段・晚上九點後的搶購潮',
+        desc: '明洞夜市時段開啟！白天原價賣給觀光客，晚上九點後本地下班族出沒，對價格敏感度較高，適合推出「夜間限時特惠」衝刺最後一波營業額。',
+        trafficLabel: '🌙 夜購潮 (115%)', trafficMult: 1.15,
+        favorTier: 'low', favorTierLabel: '💙 有利低單價 (<$500)',
+        expectedDir: 'down', directionHint: '📉 時段差別訂價微降',
+        optimalStrategies: ['discount', 'odd'],
+        answerText: '【§9.4.3 依時間差別訂價】針對不同時段價格敏感度差異，在夜間推出限時優惠價 (-5%~-15%) 可有效吸納原本不願原價購買的客群。'
+      },
+
+      // ---------- 【高難度】10 題：複雜干擾訊息、多重拉鋸、陷阱判別 ----------
+      {
+        id: 'H1', difficulty: 'high', diffLabel: '🔴 高難度',
+        chapter: '§9.2.2 威望效應 vs 價格彈性陷阱',
+        title: '名媛私房推薦＋假貨風波・信任與高價的兩難',
+        desc: '社群媒體傳出他牌平價水貨疑雲，消費者對「過於便宜的化妝品」產生強烈不信任感；同時財經新聞預測景氣趨緩，但今日明洞進駐的卻是高端商務客。降價會被誤認為假貨，亂暴漲又怕超出認知價值，該如何拿捏？',
+        trafficLabel: '💼 商務客 (110%)', trafficMult: 1.10,
+        favorTier: 'high', favorTierLabel: '💜 有利高單價 (>$1000)',
+        expectedDir: 'up', directionHint: '📈 逆勢微漲建立正品信任',
+        optimalStrategies: ['skimming'],
+        answerText: '【高難度判讀：§9.2.1.5 宣示品質 & §9.2.4.3 認知價值】雖然新聞報景氣趨緩（干擾訊息），但當下市場出現「低價＝假貨疑慮」且客群為高消費商務客，切忌降價！應「小幅調升 (+5%~+15%)」宣示正品高品質，高單價商品最受青睞。'
+      },
+      {
+        id: 'H2', difficulty: 'high', diffLabel: '🔴 高難度',
+        chapter: '§9.4.1 誘餌式訂價陷阱 vs 真誠折扣',
+        title: '爆紅引流術爭議・同業教你用「$99 缺貨話術」',
+        desc: '隔壁店老闆炫耀昨天用「$99 限量精華液」海報把整條街客人騙進門，等客人進店就說「賣完了」再強迫推銷 $1500 的套組，業績暴增！今天剛好也是人潮冷清的陰天，消保申訴專線卻悄悄貼在街口公告欄，你要跟進這種超低價話術還是正派促銷？',
+        trafficLabel: '☁️ 陰天微冷 (90%)', trafficMult: 0.90,
+        favorTier: 'low', favorTierLabel: '💙 誠信低/中單價',
+        expectedDir: 'down', directionHint: '📉 誠實適度降價（禁誘餌）',
+        optimalStrategies: ['discount', 'penetration'],
+        answerText: '【高難度判讀：§9.4.1 誘餌式訂價】絕對不可選擇「誘餌式訂價 / 聯合漲價」！陰天人少確實需要「真誠適度降價 (-8%~-15%)」來引流，但若用假廣告欺騙進店將遭重罰扣分。'
+      },
+      {
+        id: 'H3', difficulty: 'high', diffLabel: '🔴 高難度',
+        chapter: '§9.2.3.1 刮脂期尾聲轉滲透期',
+        title: '新品蜜月期結束・競品大軍壓境的轉折點',
+        desc: '你的主力商品已進入產品生命週期成熟期，早期願付高價的鐵粉都買過了；雖然原料商宣稱下個月可能小漲，但眼前已有三家新開的韓系品牌用低價搶走大量中間客群，庫存水位也還偏高。此時該守高價等下月漲價，還是立刻降價收割大眾市場？',
+        trafficLabel: '⚔️ 紅海競爭 (105%)', trafficMult: 1.05,
+        favorTier: 'low', favorTierLabel: '💙 有利低單價 (<$500)',
+        expectedDir: 'down', directionHint: '📉 刮脂轉降價收割大眾',
+        optimalStrategies: ['penetration', 'discount'],
+        answerText: '【高難度判讀：§9.2.3.1 刮脂訂價的價格調整】投影片圖 9-6 明確指出：隨著產品生命週期進展，必須「逐漸降低價格」以接近更大範圍的市場！別被「下月原料可能漲價」的干擾訊息誤導而死守高價。'
+      },
+      {
+        id: 'H4', difficulty: 'high', diffLabel: '🔴 高難度',
+        chapter: '§9.2.2.3 MR=MC 最大利潤點 vs 銷售極大化',
+        title: '產能滿載與邊際成本飆升・高銷量不等於高利潤',
+        desc: '今天街上湧入超多團客，表面上看起來「薄利多銷」可以賣光庫存；但你的進貨與包裝加班邊際成本（MC）在大量出貨後急劇上升，若價格壓太低，賣越多件反而越接近虧損線！如何在爆量人潮中守住最大利潤點（MR=MC）？',
+        trafficLabel: '🔥 超負荷 (135%)', trafficMult: 1.35,
+        favorTier: 'high', favorTierLabel: '💜 有利高/中單價',
+        expectedDir: 'up', directionHint: '📈 調高售價守住 MR=MC',
+        optimalStrategies: ['skimming', 'odd'],
+        answerText: '【高難度判讀：§9.2.2.3 邊際收入=邊際成本】當人潮爆滿且邊際成本急升時，盲目降價衝銷量會讓利潤暴跌！應「適度調漲 (+8%~+18%)」拉高邊際收入，用更少人力賺取最高總利潤。'
+      },
+      {
+        id: 'H5', difficulty: 'high', diffLabel: '🔴 高難度',
+        chapter: '§9.2.4.3 價值訂價 (EDLP) vs 頻繁促銷疲乏',
+        title: '消費者對「假折扣」麻木・透明日常低價崛起',
+        desc: '近期明洞多家商店先抬高定價再打 5 折，被網友踢爆後引起消費者反感！顧客現在對「先漲後折」充滿戒心，反而青睞價格透明、長期穩定且提供高價值的店家；然而今天週末人潮眾多，同業仍在瘋狂喊折。你該如何定價？',
+        trafficLabel: '🛍️ 理性週末 (115%)', trafficMult: 1.15,
+        favorTier: 'mid', favorTierLabel: '💛 有利中單價 ($500-$1000)',
+        expectedDir: 'hold', directionHint: '⚖️ 價值訂價(EDLP)穩健定價',
+        optimalStrategies: ['status_quo', 'bundle'],
+        answerText: '【高難度判讀：§9.2.4.3 價值訂價法 (EDLP)】如美國沃爾瑪哲學：能提供最大真實價值而非假折扣的廠商才是贏家！維持誠實穩健價位（±5% 內微調或搭售）最受理性顧客青睞。'
+      },
+      {
+        id: 'H6', difficulty: 'high', diffLabel: '🔴 高難度',
+        chapter: '§9.2.4.1 價格底線訂價法（產能閒置）',
+        title: '淡季產能過剩與固定租金壓力・是否接低毛利急單？',
+        desc: '本月店面固定租金極高，目前業績連固定成本都快付不出來；突然有旅遊平台開出條件：只要你願意降價 18%（仍高於單位變動成本，但低於含租金的平均總成本），就幫你包銷 200 組！死守高價一定賣不出去，接單卻看似帳面微薄，該降價接單嗎？',
+        trafficLabel: '📉 淡季壓力 (85%)', trafficMult: 0.85,
+        favorTier: 'low', favorTierLabel: '💙 有利低單價 (<$500)',
+        expectedDir: 'down', directionHint: '📉 降價突破價格底線救固定成本',
+        optimalStrategies: ['discount', 'penetration'],
+        answerText: '【高難度判讀：§9.2.4.1 價格底線訂價法】當無法以涵蓋總成本的價格賣出全部產能時，只要售價高於「變動成本」，降價 (-10%~-20%) 接單就能貢獻邊際利益來分攤固定租金，減少虧損！'
+      },
+      {
+        id: 'H7', difficulty: 'high', diffLabel: '🔴 高難度',
+        chapter: '§9.4.3 依產品型式/形象差別訂價',
+        title: '同成分不同包裝・平價版與奢華版市場分化',
+        desc: '市場調查發現，今天同時出現兩極化客群：學生想買裸裝補充瓶，但精品客卻要求精美禮盒與奢華玻璃瓶，且精品客佔了今日營業額七成！如果為了討好學生而全面降價，會徹底破壞奢華形象並大幅縮水整體利潤；該如何取捨？',
+        trafficLabel: '✨ 兩極分化 (120%)', trafficMult: 1.20,
+        favorTier: 'high', favorTierLabel: '💜 有利高單價 (>$1000)',
+        expectedDir: 'up', directionHint: '📈 鎖定高利潤精品客微漲',
+        optimalStrategies: ['skimming', 'bundle'],
+        answerText: '【高難度判讀：§9.4.3 依形象差別訂價】當高貢獻客群佔比達七成且重視形象時，不可全面降價破壞品牌定位，應採「形象差別訂價」適度提升高階價值 (+5%~+15%) 鎖定高利潤！'
+      },
+      {
+        id: 'H8', difficulty: 'high', diffLabel: '🔴 高難度',
+        chapter: '§9.1 貨幣與非貨幣代價交換',
+        title: '捷運站出口施工封閉・顧客步行距離倍增',
+        desc: '明洞主幹道旁的地鐵出口今天臨時施工，顧客必須多繞行 15 分鐘才能走到這條街（非貨幣代價：時間與精力耗損大增）！雖然天氣晴朗，但多數人走到半路就想放棄，除非店家的價格誘因大到能補償他們的體力消耗！',
+        trafficLabel: '🚧 交通不便 (82%)', trafficMult: 0.82,
+        favorTier: 'low', favorTierLabel: '💙 有利低單價 (<$500)',
+        expectedDir: 'down', directionHint: '📉 降價補償顧客非貨幣代價',
+        optimalStrategies: ['discount', 'penetration'],
+        answerText: '【高難度判讀：§9.1 價格涵義】總代價＝貨幣代價＋非貨幣代價。當顧客步行與時間成本大增時，商家必須「降低貨幣代價（降價 -10%~-20%）」才能讓總代價維持在顧客願意購買的門檻內！'
+      },
+      {
+        id: 'H9', difficulty: 'high', diffLabel: '🔴 高難度',
+        chapter: '§9.3 產品線訂價與價格帶拉鋸',
+        title: '全店單一價迷思 vs 產品線梯度策略',
+        desc: '商圈最近流行「全店均一價 $390（類似迴轉壽司）」的口號，但你的商品屬於高研發成本精華或高單價彩妝，若硬跟風降到均一價會嚴重侵蝕毛利；反之市場上高消費力旅客今天其實願意為「升級版旗艦配方」買單，只是對單調的價格感到無聊。該怎麼調整？',
+        trafficLabel: '🧪 升級需求 (115%)', trafficMult: 1.15,
+        favorTier: 'high', favorTierLabel: '💜 有利高/中單價',
+        expectedDir: 'up', directionHint: '📈 拒絕盲目均一價・升級調價',
+        optimalStrategies: ['skimming', 'bundle'],
+        answerText: '【高難度判讀：§9.3 產品線訂價】全產品單一價格不適合高研發差異化商品！應跳脫低價均一價迷思，透過產品線升級或搭售「適度調升 (+5%~+15%)」賺取合理利潤。'
+      },
+      {
+        id: 'H10', difficulty: 'high', diffLabel: '🔴 高難度',
+        chapter: '§9.2.1 總合決策（市占 vs 利潤最終權衡）',
+        title: '明洞年度封街大賞・匯率波動與雙重客群終局戰',
+        desc: '最終決戰日！韓元升值導致外國旅客購買力略微下降（對低價品變敏感），但同時本地高端VIP會員年終點數即將到期、急著消費頂級保養品衝刺贈品門檻！整體街區人潮達到巔峰，若隨便殺價會損失大量 VIP 利潤，若亂漲超過 25% 又會嚇跑外國客，考驗精準微調功力！',
+        trafficLabel: '👑 終局巔峰 (135%)', trafficMult: 1.35,
+        favorTier: 'mid', favorTierLabel: '💛 精準中/高單價最穩健',
+        expectedDir: 'hold', directionHint: '🎯 精準微調・切勿暴漲暴跌',
+        optimalStrategies: ['bundle', 'odd', 'status_quo'],
+        answerText: '【高難度判讀：§9.2.1 訂價目標綜合權衡】在「外國客對價格敏感」與「本地 VIP 急著消費」的雙重拉鋸下，暴漲暴跌都會失血！維持穩健價位（-5%~+8% 內微調，搭配畸零訂價或組合禮盒）才能兼顧成交量與總利潤奪冠！'
       }
     ];
+
+    function pickRandom10Scenarios() {
+      const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
+      const lows = shuffle(SCENARIO_POOL.filter(s => s.difficulty === 'low')).slice(0, 3);
+      const mids = shuffle(SCENARIO_POOL.filter(s => s.difficulty === 'medium')).slice(0, 4);
+      const highs = shuffle(SCENARIO_POOL.filter(s => s.difficulty === 'high')).slice(0, 3);
+      // 依 低(1~3) -> 中(4~7) -> 高(8~10) 漸進難度隨機出題，每次開局題目都不同！
+      return [...lows, ...mids, ...highs].map((item, idx) => ({ ...item, round: idx + 1 }));
+    }
 
     // ==================== 遊戲狀態與跨分頁/PeerJS 同步 ====================
     const STORAGE_KEY = 'myeongdong_cosmetics_v2';
@@ -847,6 +1097,7 @@
         phase: 'waiting',
         roundEndTime: 0,
         rankMode: 'team',
+        roundScenarios: pickRandom10Scenarios(),
         shops: [], // 一開始店面都是空白值
         lastResolution: null
       };
@@ -894,7 +1145,10 @@
 
     // ==================== 老師出題、2分鐘倒數與結算引擎 ====================
     function getScenario() {
-      return SCENARIOS[Math.min(state.currentRound - 1, SCENARIOS.length - 1)];
+      if (!state.roundScenarios || !state.roundScenarios.length) {
+        state.roundScenarios = pickRandom10Scenarios();
+      }
+      return state.roundScenarios[Math.min(state.currentRound - 1, state.roundScenarios.length - 1)];
     }
 
     function startQuestionRound() {
@@ -1011,7 +1265,7 @@
         }
       });
 
-      state.phase = state.currentRound >= SCENARIOS.length ? 'finished' : 'resolved';
+      state.phase = state.currentRound >= TOTAL_ROUNDS ? 'finished' : 'resolved';
       state.roundEndTime = 0;
       state.lastResolution = {
         round: scen.round,
@@ -1026,7 +1280,7 @@
     }
 
     function nextRound() {
-      if (state.currentRound >= SCENARIOS.length) return;
+      if (state.currentRound >= TOTAL_ROUNDS) return;
       state.currentRound += 1;
       state.phase = 'waiting';
       state.roundEndTime = 0;
@@ -1084,7 +1338,16 @@
 
     function renderHost() {
       const scen = getScenario();
-      document.getElementById('hostRoundBadge').textContent = `第 ${scen.round} / ${SCENARIOS.length} 回合`;
+      document.getElementById('hostRoundBadge').textContent = `第 ${scen.round} / ${TOTAL_ROUNDS} 回合`;
+      const diffBadge = document.getElementById('hostDiffBadge');
+      if (diffBadge) {
+        diffBadge.textContent = scen.diffLabel || '🟢 低難度';
+        diffBadge.className = 'px-2.5 py-1 rounded-full text-xs sm:text-sm font-bold border ' + (
+          scen.difficulty === 'high' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+          scen.difficulty === 'medium' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+          'bg-emerald-50 text-emerald-700 border-emerald-200'
+        );
+      }
       document.getElementById('hostChapterTag').textContent = state.phase === 'waiting' ? '等待出題中' : scen.chapter;
 
       if (state.phase === 'waiting') {
@@ -1299,7 +1562,7 @@
       const teamInfo = TEAMS[myShop.team] || TEAMS.team1;
 
       document.getElementById('mobTeamBadge').textContent = teamInfo.name;
-      document.getElementById('mobRoundBadge').textContent = `第 ${scen.round} / ${SCENARIOS.length} 回合`;
+      document.getElementById('mobRoundBadge').textContent = `第 ${scen.round} / ${TOTAL_ROUNDS} 回合`;
       document.getElementById('mobShopName').textContent = myShop.shopName;
       document.getElementById('mobPlayerName').textContent = `店長：${myShop.student}`;
       document.getElementById('mobScore').textContent = myShop.score;
@@ -1311,7 +1574,7 @@
         document.getElementById('mobScenarioTitle').textContent = `第 ${scen.round} 回合準備中`;
         document.getElementById('mobScenarioDesc').textContent = '請等待老師按下「開始出題」，倒數 2 分鐘開始後即可調整售價！';
       } else {
-        document.getElementById('mobMktStatus').textContent = scen.trafficLabel;
+        document.getElementById('mobMktStatus').textContent = `${scen.diffLabel || ''} ・ ${scen.trafficLabel}`;
         document.getElementById('mobScenarioTitle').textContent = scen.title;
         document.getElementById('mobScenarioDesc').textContent = scen.desc;
       }
