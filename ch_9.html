@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>韓國明洞化妝品一條街・商品訂價大作戰（行銷學 Ch.9）</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -1564,7 +1564,7 @@
       renderAll();
 
       const roomInputVal = document.getElementById('mobRoomInput').value.trim();
-      if (roomInputVal && (!clientConn || !clientConn.open)) {
+      if (roomInputVal && !mqttConnected) {
         pendingClientMessages.push({ type: 'PLAYER_JOIN', payload: newShop });
         connectStudentToRoom(roomInputVal);
       } else {
@@ -1672,24 +1672,20 @@
       showToast('已更換商品（認列 80% 資本）！', 'warn');
     });
 
-    // ==================== WebRTC (PeerJS) 跨裝置即時連線 & QR Code ====================
-    let peer = null;
+    // ==================== 跨裝置即時連線引擎 (MQTT over WSS，穿透校園網路與 4G/5G) ====================
+    let mqttClient = null;
+    let mqttConnected = false;
     let roomCode = '';
-    let hostConnections = [];
-    let clientConn = null;
     let isRemoteClient = false;
     let myLocalShopBackup = null;
     let pendingClientMessages = [];
+    let connectedPhones = new Set();
 
-    const PEER_CONFIG = {
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: 'stun:stun2.l.google.com:19302' }
-        ]
-      }
-    };
+    const MQTT_BROKERS = [
+      'wss://broker.emqx.io:8084/mqtt',
+      'wss://broker.hivemq.com:8884/mqtt'
+    ];
+    let brokerIdx = 0;
 
     function getOrCreateRoomCode() {
       try {
@@ -1701,10 +1697,13 @@
       } catch (e) { return String(Math.floor(1000 + Math.random() * 9000)); }
     }
 
+    function topicState(code) { return `myeongdong_game_v2/${code}/state`; }
+    function topicAction(code) { return `myeongdong_game_v2/${code}/action`; }
+
     function sendToHost(msg) {
-      if (clientConn && clientConn.open) {
+      if (mqttClient && mqttConnected && roomCode) {
         try {
-          clientConn.send(msg);
+          mqttClient.publish(topicAction(roomCode), JSON.stringify(msg));
           return true;
         } catch (e) {}
       }
@@ -1713,14 +1712,15 @@
     }
 
     function flushPendingClientMessages() {
-      if (!clientConn || !clientConn.open) return;
+      if (!mqttClient || !mqttConnected || !roomCode) return;
       while (pendingClientMessages.length > 0) {
         const msg = pendingClientMessages.shift();
-        try { clientConn.send(msg); } catch (e) {}
+        try { mqttClient.publish(topicAction(roomCode), JSON.stringify(msg)); } catch (e) {}
       }
-      // 若已登入店面，確保大螢幕一定有自己的店面資料
       if (myLocalShopBackup) {
-        try { clientConn.send({ type: 'PLAYER_JOIN', payload: myLocalShopBackup }); } catch (e) {}
+        try {
+          mqttClient.publish(topicAction(roomCode), JSON.stringify({ type: 'PLAYER_JOIN', payload: myLocalShopBackup }));
+        } catch (e) {}
       }
     }
 
@@ -1737,43 +1737,55 @@
     }
 
     function broadcastToPeers() {
-      if (!hostConnections.length) return;
-      hostConnections = hostConnections.filter(c => c && c.open);
-      hostConnections.forEach(conn => {
-        try { conn.send({ type: 'STATE_SYNC', state }); } catch (e) {}
-      });
+      if (!mqttClient || !mqttConnected || !roomCode || isRemoteClient) return;
+      try {
+        mqttClient.publish(topicState(roomCode), JSON.stringify({ type: 'STATE_SYNC', state }));
+      } catch (e) {}
       updateHostRoomBadge();
     }
 
     function updateHostRoomBadge() {
-      const openCount = hostConnections.filter(c => c && c.open).length;
       const badge = document.getElementById('hostRoomStatusBadge');
       const statusText = document.getElementById('qrPeerStatusText');
-      if (peer && !peer.destroyed && peer.id) {
-        badge.textContent = `🟢 房間 ${roomCode} ・ ${openCount} 台手機`;
+      if (mqttConnected) {
+        badge.textContent = `🟢 雲端房間 ${roomCode} ・ ${state.shops.length} 店同步中`;
         badge.className = 'px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold';
-        if (statusText) statusText.textContent = `🟢 連線已就緒，目前 ${openCount} 位同學手機連線`;
+        if (statusText) statusText.textContent = `🟢 雲端同步已就緒，目前已有 ${state.shops.length} 家店加入`;
       } else {
-        badge.textContent = `🟡 單機／同瀏覽器模式 (${roomCode})`;
+        badge.textContent = `🟡 連線雲端房間中 (${roomCode})...`;
         badge.className = 'px-2.5 py-1.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 text-xs font-semibold';
+        if (statusText) statusText.textContent = `🟡 正在建立雲端同步通道...`;
       }
     }
 
     function initHostPeer() {
-      if (typeof Peer === 'undefined') { updateHostRoomBadge(); return; }
       roomCode = getOrCreateRoomCode();
+      updateHostRoomBadge();
+      if (typeof mqtt === 'undefined') return;
       try {
-        peer = new Peer('myeongdong-street-' + roomCode, PEER_CONFIG);
-        peer.on('open', updateHostRoomBadge);
-        peer.on('connection', (conn) => {
-          hostConnections.push(conn);
-          conn.on('open', () => {
-            updateHostRoomBadge();
-            conn.send({ type: 'STATE_SYNC', state });
-          });
-          conn.on('data', (data) => {
+        if (mqttClient) mqttClient.end(true);
+        const clientId = 'host_' + roomCode + '_' + Math.random().toString(16).slice(2, 8);
+        mqttClient = mqtt.connect(MQTT_BROKERS[brokerIdx % MQTT_BROKERS.length], {
+          clientId,
+          clean: true,
+          connectTimeout: 8000,
+          reconnectPeriod: 3000
+        });
+
+        mqttClient.on('connect', () => {
+          mqttConnected = true;
+          mqttClient.subscribe(topicAction(roomCode));
+          updateHostRoomBadge();
+          broadcastToPeers();
+        });
+
+        mqttClient.on('message', (topic, payloadBuf) => {
+          try {
+            const data = JSON.parse(payloadBuf.toString());
             if (!data || !data.type) return;
-            if (data.type === 'PLAYER_JOIN') {
+            if (data.type === 'REQUEST_STATE') {
+              broadcastToPeers();
+            } else if (data.type === 'PLAYER_JOIN') {
               const p = data.payload;
               const existing = state.shops.find(s => s.id === p.id);
               if (!existing) {
@@ -1807,34 +1819,60 @@
                 renderAll();
               }
             }
-          });
-          conn.on('close', updateHostRoomBadge);
+          } catch (e) {}
         });
-        peer.on('error', updateHostRoomBadge);
-      } catch (e) { updateHostRoomBadge(); }
+
+        mqttClient.on('error', () => {
+          mqttConnected = false;
+          brokerIdx++;
+          updateHostRoomBadge();
+        });
+        mqttClient.on('offline', () => {
+          mqttConnected = false;
+          updateHostRoomBadge();
+        });
+      } catch (e) {
+        updateHostRoomBadge();
+      }
     }
 
     function connectStudentToRoom(code) {
-      const cleanCode = String(code || '').replace(/[^0-9a-zA-Z-]/g, '').trim();
-      if (!cleanCode || typeof Peer === 'undefined') return;
+      const cleanCode = String(code || '').replace(/[^0-9a-zA-Z-]/g, '').replace('myeongdong-street-', '').trim();
+      if (!cleanCode) return;
+      roomCode = cleanCode;
+      isRemoteClient = true;
       updateClientConnBadges('🟡 連線大螢幕中...', 'text-amber-600', '🟡 連線中');
+
+      if (typeof mqtt === 'undefined') {
+        updateClientConnBadges('⚠️ 連線元件載入失敗', 'text-rose-600', '⚠️ 失敗');
+        return;
+      }
+
       try {
-        if (peer && !peer.destroyed) peer.destroy();
-        peer = new Peer(PEER_CONFIG);
-        peer.on('open', () => {
-          const targetId = cleanCode.startsWith('myeongdong-street-') ? cleanCode : 'myeongdong-street-' + cleanCode;
-          clientConn = peer.connect(targetId);
-          clientConn.on('open', () => {
-            isRemoteClient = true;
-            updateClientConnBadges('🟢 已連線明洞大螢幕', 'text-emerald-600', '🟢 已連線');
-            flushPendingClientMessages();
-            showToast('成功連線到教室大螢幕！', 'success');
-          });
-          clientConn.on('data', (data) => {
+        if (mqttClient) mqttClient.end(true);
+        const clientId = 'stu_' + cleanCode + '_' + Math.random().toString(16).slice(2, 8);
+        mqttClient = mqtt.connect(MQTT_BROKERS[brokerIdx % MQTT_BROKERS.length], {
+          clientId,
+          clean: true,
+          connectTimeout: 8000,
+          reconnectPeriod: 3000
+        });
+
+        mqttClient.on('connect', () => {
+          mqttConnected = true;
+          mqttClient.subscribe(topicState(roomCode));
+          updateClientConnBadges('🟢 已連線明洞大螢幕', 'text-emerald-600', '🟢 已連線');
+          flushPendingClientMessages();
+          sendToHost({ type: 'REQUEST_STATE' });
+          showToast('成功連線到教室大螢幕！', 'success');
+        });
+
+        mqttClient.on('message', (topic, payloadBuf) => {
+          try {
+            const data = JSON.parse(payloadBuf.toString());
             if (data && data.type === 'STATE_SYNC' && data.state) {
               const prevPhase = state.phase;
               state = data.state;
-              // 防止尚未同步完成的本地剛登入店面被遠端空白狀態覆蓋
               if (mobileShopId && myLocalShopBackup && !state.shops.find(s => s.id === mobileShopId)) {
                 state.shops.push(myLocalShopBackup);
                 sendToHost({ type: 'PLAYER_JOIN', payload: myLocalShopBackup });
@@ -1843,17 +1881,17 @@
               if (prevPhase === 'bidding' && state.phase === 'resolved') playCashSound();
               renderAll();
             }
-          });
-          clientConn.on('close', () => {
-            updateClientConnBadges('🔴 連線中斷（請點連線重試）', 'text-rose-600', '🔴 斷線');
-          });
-          clientConn.on('error', () => {
-            updateClientConnBadges('⚠️ 連線失敗，請確認房間代碼', 'text-rose-600', '⚠️ 失敗');
-          });
+          } catch (e) {}
         });
-        peer.on('error', (err) => {
-          const msg = err && err.type === 'peer-unavailable' ? '⚠️ 找不到此房間代碼，請確認大螢幕' : '⚠️ 網路連線異常';
-          updateClientConnBadges(msg, 'text-rose-600', '⚠️ 未連線');
+
+        mqttClient.on('error', () => {
+          mqttConnected = false;
+          brokerIdx++;
+          updateClientConnBadges('⚠️ 連線異常，自動重試中...', 'text-rose-600', '⚠️ 重試中');
+        });
+        mqttClient.on('offline', () => {
+          mqttConnected = false;
+          updateClientConnBadges('🔴 連線中斷，重連中...', 'text-rose-600', '🔴 斷線');
         });
       } catch (e) {}
     }
