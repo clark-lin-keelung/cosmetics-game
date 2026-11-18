@@ -359,8 +359,11 @@
               <p id="mobPlayerName" class="text-xs text-gray-300">店長：</p>
             </div>
             <div class="flex flex-col items-end gap-1.5">
-              <div id="mobTimerPill" class="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-mono text-xs font-black">
-                ⏱️ 02:00
+              <div class="flex items-center gap-1.5">
+                <span id="mobDashConnDot" title="連線狀態" class="text-[11px] font-bold px-2 py-0.5 rounded bg-white/10 text-gray-200">⚪ 單機</span>
+                <div id="mobTimerPill" class="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-mono text-xs font-black">
+                  ⏱️ 02:00
+                </div>
               </div>
               <button id="btnMobileLogout" type="button" class="text-[11px] px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-gray-200">
                 切換帳號
@@ -1553,14 +1556,19 @@
         lastComment: '已成功開業！起始資本 $100,000，營業額 $0。'
       };
 
+      myLocalShopBackup = newShop;
       state.shops.push(newShop);
       mobileShopId = newId;
       saveState();
       playCashSound();
       renderAll();
 
-      if (clientConn && clientConn.open) {
-        clientConn.send({ type: 'PLAYER_JOIN', payload: newShop });
+      const roomInputVal = document.getElementById('mobRoomInput').value.trim();
+      if (roomInputVal && (!clientConn || !clientConn.open)) {
+        pendingClientMessages.push({ type: 'PLAYER_JOIN', payload: newShop });
+        connectStudentToRoom(roomInputVal);
+      } else {
+        sendToHost({ type: 'PLAYER_JOIN', payload: newShop });
       }
       showToast(`歡迎「${shopName}」進駐韓國明洞！`, 'success');
     });
@@ -1604,12 +1612,10 @@
       playCashSound();
       renderAll();
 
-      if (clientConn && clientConn.open) {
-        clientConn.send({
-          type: 'PLAYER_SUBMIT',
-          payload: { shopId: myShop.id, price: myShop.pendingPrice, strategy: myShop.pendingStrategy }
-        });
-      }
+      sendToHost({
+        type: 'PLAYER_SUBMIT',
+        payload: { shopId: myShop.id, price: myShop.pendingPrice, strategy: myShop.pendingStrategy }
+      });
       showToast('本回合定價調整已送出！', 'success');
     });
 
@@ -1656,12 +1662,13 @@
       playAlertSound();
       renderAll();
 
-      if (clientConn && clientConn.open) {
-        clientConn.send({
-          type: 'PLAYER_SWITCH_PRODUCT',
-          payload: { shopId: myShop.id, productKey: newProdKey, unitCost: newCost, stock: newStock, price: newPrice }
-        });
+      if (myLocalShopBackup && myLocalShopBackup.id === myShop.id) {
+        myLocalShopBackup = { ...myShop };
       }
+      sendToHost({
+        type: 'PLAYER_SWITCH_PRODUCT',
+        payload: { shopId: myShop.id, productKey: newProdKey, unitCost: newCost, stock: newStock, price: newPrice }
+      });
       showToast('已更換商品（認列 80% 資本）！', 'warn');
     });
 
@@ -1671,6 +1678,18 @@
     let hostConnections = [];
     let clientConn = null;
     let isRemoteClient = false;
+    let myLocalShopBackup = null;
+    let pendingClientMessages = [];
+
+    const PEER_CONFIG = {
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' }
+        ]
+      }
+    };
 
     function getOrCreateRoomCode() {
       try {
@@ -1680,6 +1699,41 @@
         sessionStorage.setItem('myeongdong_room_code', code);
         return code;
       } catch (e) { return String(Math.floor(1000 + Math.random() * 9000)); }
+    }
+
+    function sendToHost(msg) {
+      if (clientConn && clientConn.open) {
+        try {
+          clientConn.send(msg);
+          return true;
+        } catch (e) {}
+      }
+      pendingClientMessages.push(msg);
+      return false;
+    }
+
+    function flushPendingClientMessages() {
+      if (!clientConn || !clientConn.open) return;
+      while (pendingClientMessages.length > 0) {
+        const msg = pendingClientMessages.shift();
+        try { clientConn.send(msg); } catch (e) {}
+      }
+      // 若已登入店面，確保大螢幕一定有自己的店面資料
+      if (myLocalShopBackup) {
+        try { clientConn.send({ type: 'PLAYER_JOIN', payload: myLocalShopBackup }); } catch (e) {}
+      }
+    }
+
+    function updateClientConnBadges(statusText, cls, dashText) {
+      const badge = document.getElementById('mobConnBadge');
+      const dashDot = document.getElementById('mobDashConnDot');
+      if (badge) {
+        badge.textContent = statusText;
+        badge.className = `text-[11px] font-bold ${cls}`;
+      }
+      if (dashDot) {
+        dashDot.textContent = dashText || statusText;
+      }
     }
 
     function broadcastToPeers() {
@@ -1709,7 +1763,7 @@
       if (typeof Peer === 'undefined') { updateHostRoomBadge(); return; }
       roomCode = getOrCreateRoomCode();
       try {
-        peer = new Peer('myeongdong-street-' + roomCode);
+        peer = new Peer('myeongdong-street-' + roomCode, PEER_CONFIG);
         peer.on('open', updateHostRoomBadge);
         peer.on('connection', (conn) => {
           hostConnections.push(conn);
@@ -1721,10 +1775,13 @@
             if (!data || !data.type) return;
             if (data.type === 'PLAYER_JOIN') {
               const p = data.payload;
-              if (!state.shops.find(s => s.id === p.id)) state.shops.push(p);
+              const existing = state.shops.find(s => s.id === p.id);
+              if (!existing) {
+                state.shops.push(p);
+                showToast(`📱 ${p.student}（${p.shopName}）已進駐明洞！`, 'success');
+              }
               saveState();
               renderAll();
-              showToast(`📱 ${p.student}（${p.shopName}）已進駐明洞！`, 'success');
             } else if (data.type === 'PLAYER_SUBMIT') {
               const { shopId, price, strategy } = data.payload;
               const s = state.shops.find(x => x.id === shopId);
@@ -1735,6 +1792,7 @@
                 saveState();
                 playCashSound();
                 renderAll();
+                showToast(`📱 ${s.student} 已送出定價 $${price}！`, 'info');
               }
             } else if (data.type === 'PLAYER_SWITCH_PRODUCT') {
               const { shopId, productKey, unitCost, stock, price } = data.payload;
@@ -1759,34 +1817,43 @@
     function connectStudentToRoom(code) {
       const cleanCode = String(code || '').replace(/[^0-9a-zA-Z-]/g, '').trim();
       if (!cleanCode || typeof Peer === 'undefined') return;
-      const badge = document.getElementById('mobConnBadge');
-      badge.textContent = '🟡 連線大螢幕中...';
-      badge.className = 'text-[11px] font-bold text-amber-600';
+      updateClientConnBadges('🟡 連線大螢幕中...', 'text-amber-600', '🟡 連線中');
       try {
-        if (peer) peer.destroy();
-        peer = new Peer();
+        if (peer && !peer.destroyed) peer.destroy();
+        peer = new Peer(PEER_CONFIG);
         peer.on('open', () => {
           const targetId = cleanCode.startsWith('myeongdong-street-') ? cleanCode : 'myeongdong-street-' + cleanCode;
-          clientConn = peer.connect(targetId, { reliable: true });
+          clientConn = peer.connect(targetId);
           clientConn.on('open', () => {
             isRemoteClient = true;
-            badge.textContent = '🟢 已連線明洞大螢幕';
-            badge.className = 'text-[11px] font-bold text-emerald-600';
+            updateClientConnBadges('🟢 已連線明洞大螢幕', 'text-emerald-600', '🟢 已連線');
+            flushPendingClientMessages();
             showToast('成功連線到教室大螢幕！', 'success');
           });
           clientConn.on('data', (data) => {
             if (data && data.type === 'STATE_SYNC' && data.state) {
               const prevPhase = state.phase;
               state = data.state;
+              // 防止尚未同步完成的本地剛登入店面被遠端空白狀態覆蓋
+              if (mobileShopId && myLocalShopBackup && !state.shops.find(s => s.id === mobileShopId)) {
+                state.shops.push(myLocalShopBackup);
+                sendToHost({ type: 'PLAYER_JOIN', payload: myLocalShopBackup });
+              }
               if (prevPhase !== 'bidding' && state.phase === 'bidding') playAlertSound();
               if (prevPhase === 'bidding' && state.phase === 'resolved') playCashSound();
               renderAll();
             }
           });
           clientConn.on('close', () => {
-            badge.textContent = '🔴 連線中斷';
-            badge.className = 'text-[11px] font-bold text-rose-600';
+            updateClientConnBadges('🔴 連線中斷（請點連線重試）', 'text-rose-600', '🔴 斷線');
           });
+          clientConn.on('error', () => {
+            updateClientConnBadges('⚠️ 連線失敗，請確認房間代碼', 'text-rose-600', '⚠️ 失敗');
+          });
+        });
+        peer.on('error', (err) => {
+          const msg = err && err.type === 'peer-unavailable' ? '⚠️ 找不到此房間代碼，請確認大螢幕' : '⚠️ 網路連線異常';
+          updateClientConnBadges(msg, 'text-rose-600', '⚠️ 未連線');
         });
       } catch (e) {}
     }
